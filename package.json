@@ -74,7 +74,7 @@
           ]
         }
       ],
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
+      "artifactName": "WTContentManager-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -83,7 +83,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "WT Content Manager",
-      "artifactName": "${productName}-${version}-Setup.${ext}"
+      "artifactName": "WTContentManager-${version}-Setup.${ext}"
     },
     "protocols": [
       {
@@ -99,7 +99,7 @@
         "AppImage"
       ],
       "category": "Game",
-      "artifactName": "${productName}-${version}.${ext}"
+      "artifactName": "WTContentManager-${version}.${ext}"
     },
     "mac": {
       "icon": "build/icon.png",
@@ -109,7 +109,7 @@
       "category": "public.app-category.utilities"
     },
     "portable": {
-      "artifactName": "${productName}-${version}-Portable.${ext}",
+      "artifactName": "WTContentManager-${version}-Portable.${ext}",
       "unpackDirName": "WTContentManager"
     }
   },
