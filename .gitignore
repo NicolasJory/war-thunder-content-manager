@@ -1,0 +1,19 @@
+# Dépendances et sorties de build
+node_modules/
+out/
+dist/
+release/
+
+# Fichiers de travail
+.tmp/
+*.log
+
+# Captures et maquettes déposées à la racine pendant le développement
+{*}.png
+
+# Réglages d'éditeur personnels
+.vscode/
+.idea/
+
+# Document de passation interne
+BRIEF_*.md

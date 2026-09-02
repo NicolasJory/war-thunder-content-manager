@@ -1,0 +1,1763 @@
+@import "./fonts.css";
+
+/* ==================================================================
+   Nocturne — socle visuel repris du canvas de design.
+   Les valeurs viennent de la maquette, pas d'une interprétation.
+   ================================================================== */
+
+:root {
+  --bg: #0f1119;
+  --rail: #131521;
+  --panel: #161826;
+  --card: #1b1d2b;
+  --raised: #1e2030;
+  --wash-a: #232532;
+  --wash-b: #1a1c28;
+  --wash-c: #20222f;
+
+  --line: #292b31;
+  --line-2: #3f424d;
+  --line-3: #595d6c;
+
+  --text: #e9e9ed;
+  --text-2: #b2b6ca;
+  --text-3: #9397ab;
+  --text-4: #75798c;
+  --dim-60: rgb(233 233 237 / 0.6);
+  --dim-55: rgb(233 233 237 / 0.55);
+  --dim-50: rgb(233 233 237 / 0.5);
+  --dim-45: rgb(233 233 237 / 0.45);
+  --dim-40: rgb(233 233 237 / 0.4);
+  --dim-35: rgb(233 233 237 / 0.35);
+  --dim-22: rgb(233 233 237 / 0.22);
+
+  --accent: #9184d9;
+  --accent-hi: #b5abfc;
+  --accent-soft: #d2cefd;
+  --accent-deep: #5d5294;
+  --accent-bg: #2b2741;
+  --accent-wash: rgb(145 132 217 / 0.14);
+
+  --danger: #d98b7f;
+  --danger-line: #6b4a45;
+
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r: 8px;
+  --r-lg: 14px;
+  --r-pill: 999px;
+
+  --rail-w: 220px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  /* Inter est embarquée en latin + cyrillique. Les idéogrammes n'y sont pas :
+     le repli va chercher la police système. Segoe UI Symbol reste dans la pile
+     pour les marqueurs de véhicules quand Skyquake n'a pas pu être chargée. */
+  font-family: "Inter", "Segoe UI", "Segoe UI Symbol", "Microsoft YaHei", "PingFang SC",
+    "Noto Sans SC", system-ui, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--accent-hi);
+}
+::selection {
+  background: rgb(145 132 217 / 0.3);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+code {
+  font-family: "Cascadia Mono", Consolas, ui-monospace, monospace;
+  font-size: 0.92em;
+  background: var(--raised);
+  border-radius: var(--r-xs);
+  padding: 1px 5px;
+  color: var(--text-2);
+}
+
+.muted {
+  color: var(--dim-55);
+}
+.error {
+  color: var(--danger);
+}
+.warn {
+  color: var(--accent-soft);
+  margin: 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ------------------------- Attente ------------------------- */
+
+.spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  vertical-align: -2px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0.85;
+  animation: spin 0.7s linear infinite;
+}
+.spinner.lg {
+  width: 26px;
+  height: 26px;
+  border-width: 3px;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+  .card.skeleton,
+  .combo-skeleton {
+    animation: none;
+  }
+}
+
+.loading-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dim-55);
+}
+
+/* ------------------------- Boutons ------------------------- */
+/* La maquette n'utilise aucun bouton plein : tout est en contour, l'accent
+   n'apparaît qu'au trait et au survol. */
+
+.btn {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.btn.primary {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+.btn.primary:hover:not(:disabled) {
+  background: var(--accent-wash);
+}
+.btn.danger {
+  border-color: var(--danger-line);
+  color: var(--danger);
+}
+.btn.danger:hover:not(:disabled) {
+  background: rgb(217 139 127 / 0.1);
+  border-color: var(--danger);
+}
+.btn.ghost {
+  border-color: transparent;
+  color: var(--dim-55);
+}
+.btn.ghost:hover:not(:disabled) {
+  border-color: var(--line-2);
+  color: var(--text);
+}
+.btn.full {
+  width: 100%;
+  margin-top: auto;
+}
+
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.link:hover {
+  color: var(--accent-hi);
+}
+/* Lien au fil du texte : il doit se voir sans casser la ligne. */
+.link.inline {
+  display: inline;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+.link.author {
+  color: var(--dim-55);
+  font-size: 12px;
+}
+.link.author:hover {
+  color: var(--accent-soft);
+}
+
+/* ------------------------- Champs ------------------------- */
+
+.input,
+.select {
+  height: 34px;
+  padding: 0 11px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font: inherit;
+  font-size: 12.5px;
+  width: 100%;
+  min-width: 0;
+}
+.input:hover,
+.select:hover {
+  border-color: var(--line-3);
+}
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.input::placeholder {
+  color: var(--dim-35);
+}
+
+.field-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim-35);
+  margin-bottom: 6px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+/* ------------------------- Marque ------------------------- */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 20px 22px;
+}
+.monogram {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-xs);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent-soft);
+}
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.brand-top {
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.brand-bottom {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* ------------------------- Coquille ------------------------- */
+
+.boot {
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  color: var(--dim-45);
+}
+
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.rail {
+  width: var(--rail-w);
+  flex: none;
+  background: var(--rail);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--dim-55);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+.nav-item:hover:not(:disabled) {
+  background: var(--raised);
+  color: var(--text);
+}
+.nav-item.active {
+  background: var(--accent-bg);
+  box-shadow: inset 2px 0 0 var(--accent);
+  color: var(--text);
+  font-weight: 500;
+}
+.nav-item:disabled {
+  color: var(--dim-35);
+  cursor: default;
+}
+.nav-item svg {
+  flex: none;
+}
+.nav-count {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--dim-45);
+  font-variant-numeric: tabular-nums;
+}
+.nav-item.active .nav-count {
+  color: var(--accent-soft);
+}
+
+.nav-head {
+  padding: 24px 22px 8px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim-35);
+}
+
+.rail-foot {
+  margin-top: auto;
+  padding: 16px 20px 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rail-label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim-35);
+}
+.rail-path {
+  font-size: 11px;
+  color: var(--text-4);
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+.rail-actions {
+  display: flex;
+  gap: 8px;
+}
+.rail-actions .btn {
+  flex: 1;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.lang-row {
+  display: flex;
+  gap: 4px;
+  padding: 12px 18px 0;
+}
+.lang-btn {
+  flex: 1;
+  padding: 5px 4px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--dim-45);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.lang-btn:hover {
+  color: var(--text);
+  background: var(--raised);
+}
+.lang-btn.active {
+  background: var(--accent-bg);
+  color: var(--accent-soft);
+}
+
+/* ------------------------- Zone principale ------------------------- */
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 24px;
+}
+
+.content {
+  flex: 1;
+  padding: 20px 24px 40px;
+}
+
+.view-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.view-head h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.view-head p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--dim-50);
+  max-width: 70ch;
+}
+
+/* ------------------------- Barre de filtres ------------------------- */
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.2fr) minmax(140px, 0.8fr) repeat(4, minmax(115px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.combo {
+  min-width: 0;
+  position: relative;
+}
+.combo-count {
+  float: right;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+.combo-field {
+  position: relative;
+}
+.combo-field {
+  flex: 1;
+  min-width: 0;
+}
+.combo-field .input {
+  padding-right: 30px;
+}
+/* Un filtre actif prend la surface d'accent, comme dans la maquette. */
+.combo-field .input.set {
+  border-color: var(--accent-deep);
+  background: var(--accent-bg);
+  color: var(--accent-soft);
+}
+.combo-clear {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--dim-45);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.combo-clear:hover {
+  background: rgb(233 233 237 / 0.08);
+  color: var(--text);
+}
+
+.combo-list {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--raised);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.55);
+}
+/* 3 200 véhicules restent dans le DOM ; Chromium saute le hors-écran. */
+.combo-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 28px;
+}
+.combo-group {
+  position: sticky;
+  top: -4px;
+  z-index: 1;
+  padding: 8px 9px 4px;
+  margin: 2px -4px 0;
+  background: var(--raised);
+  border-bottom: 1px solid var(--line);
+  color: var(--dim-35);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.combo-group:first-child {
+  margin-top: 0;
+}
+.combo-option {
+  display: block;
+  width: 100%;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.combo-option.active {
+  background: var(--accent-bg);
+  color: var(--accent-soft);
+}
+.combo-option[aria-selected="true"]::after {
+  content: " ✓";
+  opacity: 0.75;
+}
+.combo-empty {
+  padding: 8px 9px;
+  color: var(--dim-45);
+  font-size: 12px;
+}
+.combo-skeleton {
+  height: 34px;
+  border-radius: var(--r);
+  background: linear-gradient(100deg, var(--card) 30%, var(--raised) 50%, var(--card) 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -300% 0;
+  }
+}
+
+/* ------------------------- Grille et cartes ------------------------- */
+
+/* Le minimum pilote le nombre de colonnes : à 238 px, une fenêtre maximisée
+   produisait sept colonnes de vignettes minuscules. À 300, on garde des cartes
+   lisibles quelle que soit la largeur, et la fenêtre minimale (940 px) en tient
+   encore deux. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.14s;
+}
+.card:hover {
+  border-color: var(--accent-deep);
+}
+.card.skeleton {
+  height: 250px;
+  background: linear-gradient(100deg, var(--card) 30%, var(--raised) 50%, var(--card) 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+
+.card-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.card-open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(140deg, var(--wash-a), var(--wash-b) 55%, var(--wash-c));
+  overflow: hidden;
+}
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s ease;
+}
+.card-open:hover .thumb img {
+  transform: scale(1.03);
+}
+.thumb-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim-22);
+}
+.badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  background: rgb(15 17 25 / 0.72);
+  font-size: 10.5px;
+  color: var(--text-2);
+}
+
+/* L'action est posée SUR la vignette, comme dans la maquette : elle ne consomme
+   pas de hauteur sous la carte et reste à portée immédiate. */
+.thumb-action {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 1;
+}
+.thumb-action .btn {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+  background: rgb(22 24 38 / 0.82);
+  backdrop-filter: blur(4px);
+}
+.thumb-progress {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 1;
+  padding: 7px 9px;
+  border-radius: var(--r-sm);
+  background: rgb(15 17 25 / 0.86);
+  backdrop-filter: blur(4px);
+}
+
+.card-body {
+  padding: 11px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+}
+.byline {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.byline .link,
+.byline .author-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--dim-55);
+}
+.counts {
+  margin-left: auto;
+  display: flex;
+  gap: 9px;
+  font-size: 11.5px;
+  color: var(--dim-45);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.counts .size {
+  color: var(--dim-35);
+  padding-left: 2px;
+}
+
+.avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-pill);
+  object-fit: cover;
+  background: var(--line-2);
+  flex: none;
+}
+.avatar.fallback {
+  display: inline-grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--dim-55);
+}
+.avatar.lg {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.tag {
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-4);
+  font: inherit;
+  font-size: 10.5px;
+  padding: 2px 9px;
+  cursor: pointer;
+}
+.tag:hover {
+  border-color: var(--accent-deep);
+  color: var(--accent-soft);
+}
+
+/* ------------------------- Progression ------------------------- */
+
+.progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.progress-wrap.full {
+  width: 100%;
+  margin-top: auto;
+}
+.progress-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+.progress-track {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--r-pill);
+  transition: width 0.15s linear;
+}
+.progress-bar.indeterminate {
+  width: 35%;
+  animation: slide 1.1s ease-in-out infinite alternate;
+}
+@keyframes slide {
+  from {
+    margin-left: 0;
+  }
+  to {
+    margin-left: 65%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar.indeterminate {
+    animation-duration: 3s;
+  }
+}
+
+/* ------------------------- Encarts et états ------------------------- */
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent-deep);
+  border-radius: var(--r);
+  background: var(--accent-bg);
+  color: var(--accent-soft);
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0 0 16px;
+}
+.result-note {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: var(--dim-50);
+}
+.empty {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 80px 20px;
+  text-align: center;
+}
+.empty p {
+  margin: 0;
+}
+.empty .title {
+  font-size: 15px;
+  color: var(--text-2);
+}
+
+.load-more {
+  height: 1px;
+}
+.feed-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 0 8px;
+  font-size: 12px;
+  color: var(--dim-45);
+}
+
+.page-badge {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+  padding: 6px 13px;
+  border-radius: var(--r-pill);
+  background: rgb(19 21 33 / 0.92);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.5);
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+/* ------------------------- Modales ------------------------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.65);
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  z-index: 40;
+  backdrop-filter: blur(2px);
+}
+.modal {
+  position: relative;
+  width: min(940px, 100%);
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 0.6);
+}
+.modal.small {
+  width: min(520px, 100%);
+}
+/* Corps des modales secondaires (installation, sortie vers le navigateur).
+   Perdu lors de la refonte de la fiche, alors qu'elles l'utilisent toujours. */
+.modal-body {
+  padding: 22px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.modal-body h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+.modal-body p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+.external-url {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font-family: "Cascadia Mono", Consolas, ui-monospace, monospace;
+  font-size: 11.5px;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------- Fiche (deux colonnes) ------------------------- */
+
+.sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(360px, 420px);
+  grid-template-rows: minmax(0, 1fr);
+  width: min(1360px, 94vw);
+  height: min(840px, calc(100vh - 64px));
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: 0 28px 72px rgb(0 0 0 / 0.62);
+}
+
+/* --- Colonne image --- */
+
+.sheet-view {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  background: linear-gradient(150deg, var(--wash-a), var(--wash-b) 55%, var(--wash-c));
+  border-right: 1px solid var(--line);
+  overflow: hidden;
+}
+
+/*
+ * L'image est positionnée en absolu plutôt que contrainte par des pourcentages.
+ *
+ * `max-height: 100%` ne servait à rien ici : la rangée de grille de .sheet est
+ * en `auto`, donc le pourcentage de hauteur n'avait aucune référence définie et
+ * était ignoré. Les images plus hautes que larges — courantes, ce sont des
+ * captures de jeu — sortaient à leur taille naturelle et se faisaient couper en
+ * bas par l'overflow. Un encadrement absolu ne dépend d'aucune résolution de
+ * pourcentage : object-fit adapte toujours au cadre réel.
+ *
+ * L'inset laisse la place aux flèches et aux tirets sans les faire chevaucher.
+ */
+/*
+ * Cadrage par dimensions EXPLICITES en position absolue.
+ *
+ * Les contraintes en pourcentage (`max-height: 100%`) ne se résolvent pas ici :
+ * la piste de grille est en `1fr`, que Chromium ne traite pas comme une taille
+ * définie au moment où l'image est mesurée. Résultat, les images plus hautes
+ * que larges — courantes, ce sont des captures de jeu — sortaient à leur taille
+ * naturelle et se faisaient couper en bas par l'overflow.
+ *
+ * `width`/`height` à 100 % en absolu se résolvent contre le bloc conteneur, dont
+ * la taille en pixels est connue à la mise en page. `object-fit: contain` ajuste
+ * ensuite dans la boîte de contenu, donc le padding dégage les flèches et les
+ * tirets sans wrapper supplémentaire.
+ */
+.sheet-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 18px 54px 34px;
+  object-fit: contain;
+  display: block;
+}
+.sheet-view.zoomed {
+  cursor: grab;
+}
+.sheet-view.zoomed:active {
+  cursor: grabbing;
+}
+/* Le zoom part du centre, et le décalage de panoramique s'applique avant :
+   c'est ce qui permet de zoomer sur le point visé plutôt que sur le milieu. */
+.sheet-image {
+  transform-origin: center;
+  transition: transform 0.08s linear;
+  user-select: none;
+}
+.zoom-reset {
+  position: absolute;
+  z-index: 3;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  height: 26px;
+  padding: 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: rgb(15 17 25 / 0.82);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+.zoom-reset:hover {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.sheet-image.pending {
+  opacity: 0;
+}
+
+.sheet-placeholder {
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim-22);
+}
+.gallery-spinner {
+  position: absolute;
+  color: var(--dim-45);
+}
+
+/* Flèches rondes flottantes, à mi-hauteur. */
+.round-nav {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  background: rgb(15 17 25 / 0.72);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: border-color 0.12s, background 0.12s;
+}
+.round-nav:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgb(15 17 25 / 0.9);
+}
+.round-nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.round-nav.prev {
+  left: 16px;
+}
+.round-nav.next {
+  right: 16px;
+}
+
+/* Position indiquée par des tirets : l'image reste entière. */
+.dashes {
+  position: absolute;
+  z-index: 3;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+.dash {
+  width: 22px;
+  height: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--dim-22);
+  cursor: pointer;
+  transition: background 0.14s;
+}
+.dash:hover {
+  background: var(--dim-45);
+}
+.dash.active {
+  background: var(--accent);
+}
+
+/* --- Panneau --- */
+
+.sheet-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px 22px;
+  min-width: 0;
+  overflow: hidden;
+}
+.sheet-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.sheet-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.sheet-close {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--dim-45);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.sheet-close:hover {
+  background: var(--raised);
+  color: var(--text);
+}
+
+.sheet-author {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.sheet-author .link {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fav-toggle {
+  margin-left: auto;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--dim-45);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.fav-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+.fav-toggle.on {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-soft);
+}
+
+.sheet-size {
+  margin-left: auto;
+  flex: none;
+  font-size: 11.5px;
+  color: var(--dim-45);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Statistiques sans encadré : le nombre porte, le libellé accompagne. */
+.sheet-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.sheet-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.sheet-stat strong {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-stat span {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim-45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sheet-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.description {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.sheet-date {
+  margin: 0;
+  font-size: 11.5px;
+}
+
+.sheet-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sheet-note {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--dim-40);
+}
+.sheet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.sheet-foot .btn.primary {
+  height: 42px;
+  font-size: 13.5px;
+}
+
+/* Sous 1100 px la colonne image passerait sous 400 px : on empile. */
+@media (max-width: 1100px) {
+  .sheet {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(220px, 1fr) auto;
+    height: min(760px, calc(100vh - 72px));
+  }
+  .sheet-view {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* ------------------------- Auteur ------------------------- */
+
+.author-bar {
+  margin-bottom: 10px;
+}
+.author-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.author-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.author-name {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.author-name h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.eyebrow {
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Aligné en bas : le menu de tri porte un libellé au-dessus, donc il est plus
+   haut que les autres contrôles. Centrer la rangée le désaxait. */
+.author-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.author-actions .link {
+  padding-bottom: 9px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.author-sort {
+  min-width: 190px;
+}
+
+/* ------------------------- Installés ------------------------- */
+
+.installed-card {
+  display: flex;
+  flex-direction: column;
+}
+.installed-note {
+  margin: 6px 2px 0;
+  font-size: 11px;
+  color: var(--dim-40);
+  overflow-wrap: anywhere;
+}
+.path {
+  font-size: 11px;
+  color: var(--dim-40);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------- Configuration ------------------------- */
+
+.setup {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+.setup-card {
+  width: min(600px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  padding: 30px 32px;
+}
+.setup-card h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.setup-card p {
+  margin: 0 0 18px;
+  color: var(--dim-55);
+  font-size: 13px;
+}
+.setup-lang {
+  display: flex;
+  justify-content: flex-end;
+}
+.setup-lang .lang-row {
+  padding: 0;
+}
+.setup-lang .lang-btn {
+  flex: none;
+  padding: 5px 10px;
+}
+.setup-brand .brand {
+  padding: 0 0 20px;
+}
+.hint {
+  margin: 12px 0 0 !important;
+  font-size: 12px;
+  color: var(--dim-50);
+}
+.setup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+.setup-actions .btn {
+  height: 40px;
+  padding: 0 22px;
+  font-size: 13.5px;
+}
+.footnote {
+  margin: 22px 0 0 !important;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--dim-40);
+}
+
+/* ------------------------- Notifications ------------------------- */
+
+.toasts {
+  position: fixed;
+  right: 20px;
+  bottom: 62px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 50;
+}
+.toast {
+  background: var(--raised);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 11px 15px;
+  max-width: 380px;
+  font-size: 12.5px;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.5);
+}
+.toast.ok {
+  border-color: var(--accent-deep);
+  color: var(--accent-soft);
+}
+.toast.err {
+  border-color: var(--danger-line);
+  color: var(--danger);
+}
+
+/* ------------------------- Icônes de véhicule ------------------------- */
+/* Skyquake dessine les marqueurs nationaux (▄ ◘ ␗) dans les libellés. */
+.has-skyquake .combo-option,
+.has-skyquake .combo-field .input,
+.has-skyquake .combo-group {
+  font-family: "Skyquake", "Inter", "Segoe UI", system-ui, sans-serif;
+}
+
+/* ------------------------- Barres de défilement ------------------------- */
+/*
+ * On ne cible que Chromium (Electron), donc on peut les dessiner entièrement.
+ *
+ * Piège : depuis Chromium 121, déclarer `scrollbar-width` ou `scrollbar-color`
+ * fait IGNORER les pseudo-éléments ::-webkit-scrollbar sur le même élément. Les
+ * deux mécanismes ne se complètent pas, ils s'excluent — on s'en tient au
+ * webkit, seul à permettre un pouce arrondi, creusé et réactif au survol.
+ */
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  /* La bordure transparente creuse le pouce : il flotte au lieu de coller aux
+     bords, et le fond de la zone reste visible autour. */
+  background: var(--line-2);
+  border: 3px solid transparent;
+  border-radius: var(--r-pill);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--line-3);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--accent-deep);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Panneaux étroits : une barre plus fine, sinon elle mange la lisibilité. */
+.combo-list::-webkit-scrollbar,
+.sheet-scroll::-webkit-scrollbar,
+.description::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.combo-list::-webkit-scrollbar-thumb,
+.sheet-scroll::-webkit-scrollbar-thumb,
+.description::-webkit-scrollbar-thumb {
+  border-width: 2px;
+}
+
+/* ------------------------- Aperçu au survol ------------------------- */
+/* Panneau flottant qui s'ouvre après un délai sur une carte survolée, et
+   fait défiler les images quand il y en a plusieurs. */
+
+.hover-preview {
+  position: fixed;
+  z-index: 35;
+  padding: 8px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  box-shadow: 0 20px 52px rgb(0 0 0 / 0.62);
+  pointer-events: none;
+  animation: hover-in 0.14s ease-out;
+}
+@keyframes hover-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hover-preview {
+    animation: none;
+  }
+}
+
+.hover-frame {
+  aspect-ratio: 16 / 10;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: linear-gradient(140deg, var(--wash-a), var(--wash-b) 55%, var(--wash-c));
+}
+.hover-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.hover-dashes {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  padding-top: 8px;
+}
+.hover-dash {
+  width: 18px;
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--dim-22);
+  transition: background 0.18s;
+}
+.hover-dash.active {
+  background: var(--accent);
+}
+
+/* ------------------------- Installés : actions et étrangers ------------------------- */
+
+.head-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.checked {
+  font-size: 11.5px;
+}
+.installed-card .btn.update {
+  margin-top: 8px;
+}
+
+.foreign {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.more-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.more-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.foreign-help {
+  margin: 0 0 14px;
+  font-size: 12px;
+  max-width: 78ch;
+}
+.foreign-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+/* Lecture seule assumée : pas d'effet de survol, rien de cliquable. */
+.foreign-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r);
+  color: var(--dim-50);
+  font-size: 12.5px;
+}
+.foreign-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* `hidden` doit vraiment masquer : la grille en display:grid l'emporterait. */
+[hidden] {
+  display: none !important;
+}
+
+/* ------------------------- Favoris ------------------------- */
+
+.fav-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.fav-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.14s;
+}
+.fav-card:hover {
+  border-color: var(--accent-deep);
+}
+.fav-card svg {
+  margin-left: auto;
+  color: var(--dim-35);
+  flex: none;
+}
+.fav-card:hover svg {
+  color: var(--accent-soft);
+}
+.fav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.fav-text strong {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fav-text .muted {
+  font-size: 11.5px;
+}
+
+/* Le lien vers le site descend sous les actions : c'est une sortie, pas une
+   action de même rang que partager ou installer. */
+.sheet-live {
+  align-self: center;
+  font-size: 12px;
+}

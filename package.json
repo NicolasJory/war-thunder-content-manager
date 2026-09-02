@@ -1,0 +1,72 @@
+{
+  "name": "wt-content-manager",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "smoke": "tsx test/install.smoke.ts",
+    "smoke:config": "tsx test/config.smoke.ts",
+    "smoke:real": "tsx test/realdir.smoke.ts",
+    "smoke:ui": "tsx test/ui.smoke.ts",
+    "smoke:validate": "tsx test/validate.smoke.ts"
+  },
+  "dependencies": {
+    "adm-zip": "^0.6.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^44.1.0",
+    "electron-vite": "^5.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vite": "^7.3.6"
+  },
+  "main": "out/main/index.js",
+  "productName": "War Thunder Content Manager",
+  "description": "Browse and install War Thunder Live community content in one click.",
+  "build": {
+    "appId": "dev.webexpr.wtcontentmanager",
+    "productName": "War Thunder Content Manager",
+    "directories": {
+      "buildResources": "build"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage"
+      ]
+    }
+  },
+  "license": "GPL-3.0-or-later",
+  "author": "Nicolas Jory",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NicolasJory/war-thunder-content-manager.git"
+  },
+  "homepage": "https://github.com/NicolasJory/war-thunder-content-manager",
+  "bugs": {
+    "url": "https://github.com/NicolasJory/war-thunder-content-manager/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
