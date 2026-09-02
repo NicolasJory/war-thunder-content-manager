@@ -1,5 +1,8 @@
 # War Thunder Content Manager
 
+[![Latest release](https://img.shields.io/github/v/release/NicolasJory/war-thunder-content-manager)](https://github.com/NicolasJory/war-thunder-content-manager/releases/latest)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
+
 Browse the camouflages published on [War Thunder Live](https://live.warthunder.com) and install them into the game with one click.
 
 Doing this by hand means downloading an archive, unzipping it, and dropping the folder in the right place inside your game files. The app handles those three steps, and removes cleanly whatever it installed.
@@ -31,7 +34,7 @@ Two builds, same app. Both keep their settings in the same place, so you can swi
 
 Take the installer unless you have a reason not to. The portable build suits a USB stick or a machine where you would rather not install anything.
 
-No release published yet. Build either one yourself with `npm run dist`, or see [Development](#development).
+**[Download the latest release](https://github.com/NicolasJory/war-thunder-content-manager/releases/latest)**, or build either one yourself with `npm run dist`.
 
 ### What Windows will tell you the first time
 
