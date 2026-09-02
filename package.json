@@ -83,7 +83,14 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "WT Content Manager",
-      "artifactName": "WTContentManager-${version}-Setup.${ext}"
+      "artifactName": "WTContentManager-${version}-Setup.${ext}",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "installerHeader": "build/installerHeader.bmp",
+      "include": "build/installer.nsh"
     },
     "protocols": [
       {
