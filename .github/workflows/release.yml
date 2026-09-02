@@ -1,0 +1,40 @@
+# Construit et publie l'installeur quand un tag de version est poussé.
+#
+#   npm version patch && git push --follow-tags
+#
+# La release est créée en brouillon : elle n'apparaît publiquement qu'après
+# relecture des notes et vérification du binaire.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Vérification des types
+        run: npm run typecheck
+
+      # Les suites qui touchent le réseau et le vrai dossier de jeu ne peuvent
+      # pas tourner ici : pas de War Thunder installé, et marteler une API non
+      # officielle depuis la CI n'aurait rien d'aimable. Elles se lancent en
+      # local avant de poser un tag.
+      - name: Construire et publier
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

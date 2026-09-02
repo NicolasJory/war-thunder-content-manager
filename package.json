@@ -1,6 +1,6 @@
 {
   "name": "wt-content-manager",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,10 +12,14 @@
     "smoke:config": "tsx test/config.smoke.ts",
     "smoke:real": "tsx test/realdir.smoke.ts",
     "smoke:ui": "tsx test/ui.smoke.ts",
-    "smoke:validate": "tsx test/validate.smoke.ts"
+    "smoke:validate": "tsx test/validate.smoke.ts",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder --publish never",
+    "release": "npm run build && electron-builder --publish always"
   },
   "dependencies": {
-    "adm-zip": "^0.6.0"
+    "adm-zip": "^0.6.0",
+    "electron-updater": "^6.8.9"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",
@@ -24,6 +28,7 @@
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^5.2.0",
     "electron": "^44.1.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -35,25 +40,66 @@
   "productName": "War Thunder Content Manager",
   "description": "Browse and install War Thunder Live community content in one click.",
   "build": {
-    "appId": "dev.webexpr.wtcontentmanager",
+    "appId": "dev.nicolasjory.wtcontentmanager",
     "productName": "War Thunder Content Manager",
+    "copyright": "Copyright \u00a9 2026 Nicolas Jory",
     "directories": {
-      "buildResources": "build"
+      "buildResources": "build",
+      "output": "release"
     },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "NicolasJory",
+        "repo": "war-thunder-content-manager"
+      }
+    ],
     "win": {
       "icon": "build/icon.ico",
       "target": [
-        "nsis"
-      ]
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-Setup.${ext}"
     },
-    "mac": {
-      "icon": "build/icon.png"
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "WT Content Manager"
     },
+    "protocols": [
+      {
+        "name": "War Thunder Content Manager",
+        "schemes": [
+          "wtcm"
+        ]
+      }
+    ],
     "linux": {
       "icon": "build/icon.png",
       "target": [
         "AppImage"
-      ]
+      ],
+      "category": "Game",
+      "artifactName": "${productName}-${version}.${ext}"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.utilities"
     }
   },
   "license": "GPL-3.0-or-later",

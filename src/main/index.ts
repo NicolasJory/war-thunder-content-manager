@@ -7,12 +7,12 @@
 
 import { app, BrowserWindow, clipboard, dialog, ipcMain, session, shell } from "electron";
 import path from "path";
-import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import filtersFallback from "./filters.fallback.json" with { type: "json" };
 import { ERR, fail } from "../shared/errors.js";
-import { parseDeepLink, SCHEME, type DeepLink } from "../shared/deepLink.js";
-import { DEFAULT_ENDPOINTS, mergeEndpoints, type Endpoints } from "../shared/endpoints.js";
+import { parseDeepLink, setSiteHosts, SCHEME, type DeepLink } from "../shared/deepLink.js";
+import { DEFAULT_ENDPOINTS, type Endpoints } from "../shared/endpoints.js";
+import { resolveEndpoints, startUpdater } from "./updater.js";
 import {
   asIndex,
   asRecordRef,
@@ -79,25 +79,6 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 let pendingLink: DeepLink | null = null;
 let endpoints: Endpoints = DEFAULT_ENDPOINTS;
-
-/**
- * Charge un remplacement du manifeste depuis `endpoints.json`, à côté de la
- * configuration.
- *
- * C'est la soupape : l'API de Live n'est pas officielle, et le jour où elle
- * bouge, déposer ce fichier répare l'application sans recompiler ni
- * réinstaller. Chaque champ est validé séparément — un fichier à moitié faux
- * n'emporte pas les champs valides avec lui.
- */
-async function loadEndpoints(file: string): Promise<Endpoints> {
-  try {
-    const raw = JSON.parse(await readFile(file, "utf8"));
-    return mergeEndpoints(raw);
-  } catch {
-    // Absent, illisible ou invalide : les valeurs par défaut suffisent.
-    return DEFAULT_ENDPOINTS;
-  }
-}
 
 /** Extrait un lien des arguments de lancement (Windows et Linux). */
 function linkFromArgv(argv: string[]): DeepLink | null {
@@ -509,13 +490,19 @@ if (!primary) {
     if (!process.env.ELECTRON_RENDERER_URL) applyCsp();
 
     const userData = app.getPath("userData");
-    // Avant toute requête : le manifeste décide de tout ce qui sort.
-    endpoints = await loadEndpoints(path.join(userData, "endpoints.json"));
+    // Avant toute requête : le manifeste décide de tout ce qui sort. Ordre de
+    // priorité — fichier local, manifeste publié, dernier connu, compilé.
+    endpoints = await resolveEndpoints(userData);
     setEndpoints(endpoints);
+    setSiteHosts(endpoints.siteHosts);
 
     store = createConfigStore(path.join(userData, "config.json"));
     registerIpc();
     createWindow();
+
+    // Après la fenêtre : une vérification de mise à jour ne doit pas retarder
+    // l'affichage. Elle échoue en silence si le réseau manque.
+    startUpdater();
 
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();

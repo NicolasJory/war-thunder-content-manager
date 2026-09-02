@@ -1,0 +1,26 @@
+{
+  "_comment": "Manifeste des endpoints, lu au demarrage par l'application. Editer ce fichier repare tous les utilisateurs au lancement suivant, sans publier de version. Chaque champ est valide separement cote client : un champ refuse garde sa valeur d'origine.",
+  "_updated": "2026-09-02",
+  "version": 1,
+  "base": "https://live.warthunder.com",
+  "api": {
+    "feed": "/api/feed/get_regular/",
+    "head": "/api/feed/get_head/",
+    "post": "/api/posts/get/",
+    "user": "/api/feed/get_user/"
+  },
+  "downloadHosts": [
+    "live.warthunder.com",
+    "cdn-live.warthunder.com"
+  ],
+  "siteHosts": [
+    "live.warthunder.com",
+    "www.live.warthunder.com"
+  ],
+  "vehicleFont": "/fonts/symbols_skyquake_short.woff2",
+  "pages": {
+    "post": "https://live.warthunder.com/post/{id}/",
+    "user": "https://live.warthunder.com/user/{name}/",
+    "tag": "https://live.warthunder.com/?q=%23{tag}"
+  }
+}
