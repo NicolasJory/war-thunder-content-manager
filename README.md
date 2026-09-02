@@ -1,86 +1,87 @@
 # War Thunder Content Manager
 
-Parcourir les camouflages publiés sur [War Thunder Live](https://live.warthunder.com) et les installer dans le jeu en un clic, sans toucher au moindre fichier.
+Browse the camouflages published on [War Thunder Live](https://live.warthunder.com) and install them into the game with one click.
 
-Sans l'application, poser un camouflage veut dire télécharger une archive, la dézipper et déposer le dossier au bon endroit dans les fichiers du jeu. L'application fait ces trois étapes pour vous, et sait défaire proprement ce qu'elle a posé.
+Doing this by hand means downloading an archive, unzipping it, and dropping the folder in the right place inside your game files. The app handles those three steps, and removes cleanly whatever it installed.
 
-## Fonctionnalités
+## Features
 
-- Catalogue en défilement infini, filtres par pays, type, classe et véhicule
-- Recherche par hashtag, tri sur les quatre critères du site
-- Fiche détaillée avec galerie zoomable, statistiques et description
-- Installation en un clic, avec choix du nom de dossier affiché en jeu
-- Suivi de ce qui est installé, détection des contenus republiés depuis
-- Favoris d'auteurs, partage de liens, ouverture d'un lien reçu directement dans l'application
-- Interface en anglais, français, russe et chinois simplifié
+- Infinite-scrolling catalogue, filtered by country, type, class and vehicle
+- Hashtag search, plus the four sort orders the site offers
+- Detail sheet with a zoomable gallery, stats and description
+- One-click install, and you choose the folder name the game will show
+- Tracks what you installed and flags content republished since
+- Author favourites, shareable links, and links that open straight in the app
+- Interface in English, French, Russian and Simplified Chinese
 
-L'application détecte votre installation Steam au premier lancement. Elle ne touche jamais aux dossiers qu'elle n'a pas créés : les templates livrés par Gaijin et les camouflages posés à la main restent intacts, et sont affichés en lecture seule.
+The app finds your Steam installation on first launch. It never touches folders it did not create: Gaijin's templates and camouflages you placed by hand stay untouched, and appear read-only.
 
-## Installation
+## Install
 
-Aucune version publiée pour le moment. En attendant, voir [Développement](#développement).
+No release published yet. See [Development](#development) in the meantime.
 
-### Avertissements à la première ouverture
+### What Windows will tell you the first time
 
-Les binaires ne sont pas signés — un certificat coûte plusieurs centaines d'euros par an, ce qui n'a pas de sens pour un outil gratuit. Deux conséquences.
+The binaries carry no code signature. A certificate runs several hundred euros a year, which makes no sense for a free tool. Two consequences follow.
 
-**Windows affiche « Windows a protégé votre ordinateur ».** Cliquez sur « Informations complémentaires », puis « Exécuter quand même ».
+**Windows shows "Windows protected your PC".** Click "More info", then "Run anyway".
 
-**Votre antivirus peut réagir.** Une application Electron non signée qui écrit dans un dossier de jeu et fait des requêtes réseau coche plusieurs cases d'un profil suspect. Le code est intégralement lisible dans ce dépôt, et vous pouvez le construire vous-même si vous préférez.
+**Your antivirus may complain.** An unsigned Electron app that writes into a game folder and makes network requests ticks several boxes on a suspicious profile. Every line of the code sits in this repository, and you can build it yourself if you would rather.
 
-## Ce que l'application fait de vos données
+## What the app does with your data
 
-Rien ne sort de votre machine. Il n'y a ni compte, ni télémétrie, ni serveur intermédiaire : l'application interroge War Thunder Live directement, et écrit uniquement dans le dossier `UserSkins` de votre jeu.
+Nothing leaves your machine. There is no account, no telemetry and no server in between: the app talks to War Thunder Live directly, and writes only into your game's `UserSkins` folder.
 
-Le contenu installé est visible de vous seul, en local. Le serveur de jeu ne le voit pas.
+Installed content is visible to you alone, locally. The game server never sees it.
 
-Les réglages tiennent dans un fichier, à côté du dossier de configuration de l'application :
+Your settings live in one file, next to the app's configuration folder:
 
 ```
 %APPDATA%\War Thunder Content Manager\config.json
 ```
 
-## Développement
+## Development
 
-Il vous faut Node.js 20 ou plus récent.
+You need Node.js 20 or newer.
 
 ```bash
 npm install
 npm run dev
 ```
 
-### Commandes
+### Commands
 
-| Commande | Effet |
+| Command | What it does |
 |---|---|
-| `npm run dev` | Lance l'application avec rechargement à chaud |
-| `npm run build` | Vérifie les types et construit les trois processus |
-| `npm run typecheck` | Vérifie les types seuls |
-| `npm run smoke` | Installation réelle : télécharge deux vraies archives et les pose dans un dossier de test |
-| `npm run smoke:real` | Idem, mais dans votre vrai dossier de jeu — vérifie qu'il ressort intact |
-| `npm run smoke:ui` | Filtres, traductions, découpage des descriptions |
-| `npm run smoke:validate` | Validation de la frontière IPC, liens entrants, manifeste |
-| `npm run smoke:config` | Détection Steam, persistance |
+| `npm run dev` | Runs the app with hot reload |
+| `npm run build` | Type-checks and builds all three processes |
+| `npm run typecheck` | Types only |
+| `npm run dist` | Builds the NSIS installer into `release/` |
+| `npm run smoke` | Real install: downloads two actual archives into a test folder |
+| `npm run smoke:real` | Same, against your real game folder, checking it comes back untouched |
+| `npm run smoke:ui` | Filters, translations, description parsing |
+| `npm run smoke:validate` | IPC boundary validation, incoming links, endpoint manifest |
+| `npm run smoke:config` | Steam detection, persistence |
 
-Les tests touchent la vraie API et de vraies archives. Ils sont lents et dépendent du réseau, c'est voulu : une suite qui ne parle qu'à des simulacres ne remarquerait pas que l'API a changé.
+The tests hit the live API and download real archives. They are slow and depend on the network, on purpose: a suite that only talks to mocks would never notice the API changing under it.
 
-### Structure
+### Layout
 
 ```
 src/
-  main/       Processus Electron : appels réseau, installation, filesystem
-  preload/    Pont contextBridge, seule surface exposée au renderer
-  renderer/   Interface React
-  shared/     Modules purs partagés par les deux côtés
+  main/       Electron main process: network, install, filesystem
+  preload/    contextBridge, the only surface the renderer sees
+  renderer/   React interface
+  shared/     Pure modules used by both sides
 ```
 
-Le renderer n'a accès ni au réseau, ni au système de fichiers. Tout passe par des canaux IPC nommés, dont les arguments sont validés à l'arrivée.
+The renderer reaches neither the network nor the filesystem. Everything goes through named IPC channels whose arguments are validated on arrival.
 
-### Quand l'API de Live change
+### When the Live API moves
 
-Les endpoints ne sont pas officiels. Ils sont tous déclarés dans `src/shared/endpoints.ts` — adresses, en-têtes, motif d'extraction des filtres, hôtes autorisés, limites de sécurité — et aucune URL n'est écrite en dur ailleurs.
+These endpoints are unofficial. They all live in `src/shared/endpoints.ts`: addresses, headers, the pattern that extracts the filter taxonomy, allowed download hosts and safety limits. No URL is hard-coded anywhere else.
 
-Vous pouvez remplacer tout ou partie du manifeste sans recompiler, en déposant un fichier à côté de la configuration :
+You can override any part of the manifest without recompiling. Drop a file next to your configuration:
 
 ```
 %APPDATA%\War Thunder Content Manager\endpoints.json
@@ -93,22 +94,30 @@ Vous pouvez remplacer tout ou partie du manifeste sans recompiler, en déposant 
 }
 ```
 
-Chaque champ est validé séparément. Un fichier à moitié faux garde les valeurs par défaut pour ce qui ne passe pas, plutôt que de casser l'application.
+The app also reads [`endpoints.json`](endpoints.json) from this repository at startup, which means one commit repairs every user on their next launch, with no release to publish. Your local file wins over the published one.
 
-## Limites connues
+Each field is validated on its own. A half-wrong file keeps the defaults for whatever fails, rather than breaking the app.
 
-**Un lien `https://live.warthunder.com` reçu sur Discord ouvrira votre navigateur.** Windows réserve l'interception des liens web au navigateur par défaut. Deux contournements : les liens partagés depuis l'application utilisent un protocole maison qui l'ouvre directement, et coller une URL Live dans le champ de recherche ouvre le contenu dans l'application.
+## Known limits
 
-**Les libellés des filtres véhicule restent en anglais** dans toutes les langues. Ils viennent de l'API, sur une taxonomie de plus de 3 000 entrées qui bouge à chaque mise à jour du jeu.
+**A `https://live.warthunder.com` link someone sends you on Discord opens your browser.** Windows reserves web link handling for the default browser. Two ways around it: links shared from the app use a custom protocol that opens it directly, and pasting a Live URL into the search field opens that content in the app.
 
-**Les viseurs et les mods son ne sont pas encore installables.** L'architecture les accueille, le travail reste à faire.
+**Vehicle filter values stay in English** across all four languages. They come from the API, over a taxonomy of more than 3,000 entries that shifts with every game update.
 
-## Licence
+**Sights and sound mods are not installable yet.** The architecture has room for them; the work is still to do.
+
+## Contributing
+
+Issues and pull requests are welcome. Before opening a PR, run `npm run typecheck` and the test suites that apply to what you touched.
+
+Source comments are in French. Nothing else is: user-facing strings live in `src/renderer/src/i18n.ts`, and adding a language means adding one dictionary there. TypeScript will list every key you missed.
+
+## License
 
 [GPL-3.0](LICENSE).
 
-Les polices Inter sont distribuées sous [SIL Open Font License 1.1](https://github.com/rsms/inter/blob/master/LICENSE.txt).
+The Inter typeface ships under the [SIL Open Font License 1.1](https://github.com/rsms/inter/blob/master/LICENSE.txt).
 
-La police d'icônes qui dessine les insignes nationaux appartient à Gaijin Entertainment. Elle n'est pas redistribuée : l'application la télécharge depuis leur serveur au premier lancement, comme le ferait un navigateur.
+The icon font that draws the national roundels belongs to Gaijin Entertainment. This repository does not redistribute it: the app fetches it from their server on first launch, the same way a browser would.
 
-Ce projet n'est ni affilié à Gaijin Entertainment, ni approuvé par eux. War Thunder et War Thunder Live sont leurs marques.
+This project is neither affiliated with nor endorsed by Gaijin Entertainment. War Thunder and War Thunder Live are their trademarks.

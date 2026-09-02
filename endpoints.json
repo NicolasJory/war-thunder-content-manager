@@ -1,5 +1,6 @@
 {
-  "_comment": "Manifeste des endpoints, lu au demarrage par l'application. Editer ce fichier repare tous les utilisateurs au lancement suivant, sans publier de version. Chaque champ est valide separement cote client : un champ refuse garde sa valeur d'origine.",
+  "_comment": "Endpoint manifest, read by the app at startup. Editing this file repairs every user on their next launch, with no release to publish. Each field is validated on its own client-side: a rejected field keeps its built-in value.",
+  "_docs": "https://github.com/NicolasJory/war-thunder-content-manager#when-the-live-api-moves",
   "_updated": "2026-09-02",
   "version": 1,
   "base": "https://live.warthunder.com",

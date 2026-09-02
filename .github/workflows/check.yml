@@ -1,4 +1,4 @@
-# Vérifie que la branche construit toujours. Ne touche ni au réseau ni au jeu.
+# Checks the branch still builds. Touches neither the network nor the game.
 name: Check
 
 on:

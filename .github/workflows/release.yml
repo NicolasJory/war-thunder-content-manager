@@ -1,9 +1,9 @@
-# Construit et publie l'installeur quand un tag de version est poussé.
+# Builds and publishes the installer when a version tag is pushed.
 #
 #   npm version patch && git push --follow-tags
 #
-# La release est créée en brouillon : elle n'apparaît publiquement qu'après
-# relecture des notes et vérification du binaire.
+# The release lands as a draft: it goes public only after you review the
+# notes and check the binary.
 name: Release
 
 on:
@@ -27,14 +27,13 @@ jobs:
 
       - run: npm ci
 
-      - name: Vérification des types
+      - name: Type check
         run: npm run typecheck
 
-      # Les suites qui touchent le réseau et le vrai dossier de jeu ne peuvent
-      # pas tourner ici : pas de War Thunder installé, et marteler une API non
-      # officielle depuis la CI n'aurait rien d'aimable. Elles se lancent en
-      # local avant de poser un tag.
-      - name: Construire et publier
+      # The suites that hit the network and the real game folder cannot run
+      # here: no War Thunder on a runner, and hammering an unofficial API from
+      # CI would be rude. Run those locally before tagging.
+      - name: Build and publish
         run: npm run release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
