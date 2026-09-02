@@ -18,7 +18,20 @@ The app finds your Steam installation on first launch. It never touches folders 
 
 ## Install
 
-No release published yet. See [Development](#development) in the meantime.
+Two builds, same app. Both keep their settings in the same place, so you can switch between them.
+
+| | Installer | Portable |
+|---|---|---|
+| File | `...-Setup.exe` | `...-Portable.exe` |
+| Installs to | Folder of your choice | Nothing installed |
+| Desktop shortcut | Yes | No |
+| `wtcm://` links open the app | Yes | No |
+| Auto-updates | Yes | No, download the new version |
+| First launch | Fast | A few seconds slower, it unpacks itself |
+
+Take the installer unless you have a reason not to. The portable build suits a USB stick or a machine where you would rather not install anything.
+
+No release published yet. Build either one yourself with `npm run dist`, or see [Development](#development).
 
 ### What Windows will tell you the first time
 
@@ -56,7 +69,7 @@ npm run dev
 | `npm run dev` | Runs the app with hot reload |
 | `npm run build` | Type-checks and builds all three processes |
 | `npm run typecheck` | Types only |
-| `npm run dist` | Builds the NSIS installer into `release/` |
+| `npm run dist` | Builds both the installer and the portable exe into `release/` |
 | `npm run smoke` | Real install: downloads two actual archives into a test folder |
 | `npm run smoke:real` | Same, against your real game folder, checking it comes back untouched |
 | `npm run smoke:ui` | Filters, translations, description parsing |

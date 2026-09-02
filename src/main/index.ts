@@ -12,7 +12,7 @@ import filtersFallback from "./filters.fallback.json" with { type: "json" };
 import { ERR, fail } from "../shared/errors.js";
 import { parseDeepLink, setSiteHosts, SCHEME, type DeepLink } from "../shared/deepLink.js";
 import { DEFAULT_ENDPOINTS, type Endpoints } from "../shared/endpoints.js";
-import { resolveEndpoints, startUpdater } from "./updater.js";
+import { isPortable, resolveEndpoints, startUpdater } from "./updater.js";
 import {
   asIndex,
   asRecordRef,
@@ -480,7 +480,10 @@ if (!primary) {
       if (process.argv.length >= 2) {
         app.setAsDefaultProtocolClient(SCHEME, process.execPath, [path.resolve(process.argv[1])]);
       }
-    } else {
+    } else if (!isPortable()) {
+      // Pas en portable : le binaire vit dans un dossier de travail qui change,
+      // enregistrer ce chemin laisserait une association morte dans le registre
+      // dès la fin de la session.
       app.setAsDefaultProtocolClient(SCHEME);
     }
 

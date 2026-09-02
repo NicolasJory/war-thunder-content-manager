@@ -88,6 +88,16 @@ export async function resolveEndpoints(userData: string): Promise<Endpoints> {
 }
 
 /**
+ * Le .exe portable se réextrait à chaque lancement dans un dossier de travail.
+ * Rien ne persiste à cet emplacement, donc rien n'y serait mis à jour : une
+ * vérification ne pourrait qu'échouer. electron-builder signale ce mode par
+ * PORTABLE_EXECUTABLE_DIR.
+ */
+export function isPortable(): boolean {
+  return Boolean(process.env.PORTABLE_EXECUTABLE_DIR);
+}
+
+/**
  * Vérifie et installe une nouvelle version.
  *
  * Téléchargement automatique, mais installation au prochain arrêt : couper
@@ -96,7 +106,7 @@ export async function resolveEndpoints(userData: string): Promise<Endpoints> {
  */
 export function startUpdater(): void {
   // En développement il n'y a pas d'app-update.yml : inutile d'essayer.
-  if (!app.isPackaged) return;
+  if (!app.isPackaged || isPortable()) return;
 
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;

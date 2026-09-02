@@ -66,9 +66,15 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "artifactName": "${productName}-${version}-Setup.${ext}"
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -76,7 +82,8 @@
       "perMachine": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "WT Content Manager"
+      "shortcutName": "WT Content Manager",
+      "artifactName": "${productName}-${version}-Setup.${ext}"
     },
     "protocols": [
       {
@@ -100,6 +107,10 @@
         "dmg"
       ],
       "category": "public.app-category.utilities"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.${ext}",
+      "unpackDirName": "WTContentManager"
     }
   },
   "license": "GPL-3.0-or-later",
