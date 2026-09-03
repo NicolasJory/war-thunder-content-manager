@@ -46,6 +46,48 @@ export function endpoints(): Endpoints {
 
 const url = (path: string) => `${ENDPOINTS.base}${path}`;
 
+/**
+ * Appel d'API avec délai d'attente et réessais.
+ *
+ * Les appels sortants n'avaient ni l'un ni l'autre : un serveur qui ne répond
+ * jamais bloquait l'interface sans fin, et un incident passager remontait une
+ * erreur au joueur alors qu'un second essai aurait suffi.
+ *
+ * On ne réessaie que ce qui a une chance d'aboutir : une coupure réseau, une
+ * erreur serveur, une limitation de débit. Un 404 ou un 400 ne changera pas
+ * d'avis, insister ne ferait que retarder le message d'erreur.
+ *
+ * Deux réessais au maximum, avec une attente qui double. L'API n'est pas
+ * officielle : on ne la martèle pas.
+ */
+async function apiFetch(target: string, init: RequestInit = {}): Promise<Response> {
+  const { apiTimeoutMs, retries, retryBaseMs } = ENDPOINTS.limits;
+  let last: unknown;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    if (attempt > 0) {
+      // Une part d'aléa dans l'attente : si plusieurs appels échouent
+      // ensemble, ils ne repartent pas tous à la même milliseconde.
+      const wait = retryBaseMs * 2 ** (attempt - 1) * (0.75 + Math.random() * 0.5);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+
+    try {
+      const res = await fetch(target, { ...init, signal: AbortSignal.timeout(apiTimeoutMs) });
+      // 429 et 5xx méritent un second essai ; le reste est définitif.
+      if ((res.status === 429 || res.status >= 500) && attempt < retries) {
+        last = new Error(`HTTP ${res.status}`);
+        continue;
+      }
+      return res;
+    } catch (e) {
+      last = e;
+    }
+  }
+
+  throw last instanceof Error ? last : new Error("network");
+}
+
 // ------------------------- Types de contenu ------------------------- //
 // Tous vérifiés en sniffant : chaque valeur renvoie bien des items de son `type`.
 // Live expose aussi un type `mission`, non installable, hors périmètre.
@@ -174,7 +216,7 @@ export async function fetchPage(p: SearchParams = {}): Promise<Page> {
     vehicle: p.vehicle ?? "",
   });
 
-  const res = await fetch(url(ENDPOINTS.api.feed), {
+  const res = await apiFetch(url(ENDPOINTS.api.feed), {
     method: "POST",
     headers: ENDPOINTS.headers,
     body,
@@ -199,7 +241,7 @@ export async function fetchFilters(
     subtype: "all",
   });
 
-  const res = await fetch(url(ENDPOINTS.api.head), {
+  const res = await apiFetch(url(ENDPOINTS.api.head), {
     method: "POST",
     headers: ENDPOINTS.headers,
     body,
@@ -218,7 +260,7 @@ export async function fetchFilters(
 //    Sert à ré-afficher un contenu installé sans avoir à le retrouver dans le feed.
 //    Réponse : le Skin à la RACINE, pas sous `data` (contrairement aux feeds).
 export async function fetchPost(lang_group: number, language = "en"): Promise<Skin> {
-  const res = await fetch(url(ENDPOINTS.api.post), {
+  const res = await apiFetch(url(ENDPOINTS.api.post), {
     method: "POST",
     headers: ENDPOINTS.headers,
     body: new URLSearchParams({ lang_group: String(lang_group), language }),
@@ -249,7 +291,7 @@ export async function fetchUserPage(p: {
   const body = new URLSearchParams({ user: String(p.user), page: String(p.page ?? 0) });
   if (p.sort) body.set("sort", assertSort(p.sort));
 
-  const res = await fetch(url(ENDPOINTS.api.user), {
+  const res = await apiFetch(url(ENDPOINTS.api.user), {
     method: "POST",
     headers: ENDPOINTS.headers,
     body,
@@ -349,6 +391,8 @@ export interface InstallOptions {
   // de remplacer "su25_anime_3" par quelque chose de lisible.
   folderName?: string;
   onProgress?: (p: InstallProgress) => void;
+  /** Abandon demandé par le joueur. Le dossier entamé est effacé derrière. */
+  signal?: AbortSignal;
 }
 
 /**
@@ -438,7 +482,8 @@ async function fetchAllowed(raw: string, signal: AbortSignal): Promise<Response>
 async function downloadZip(
   url: string,
   expected: number,
-  onProgress?: (p: InstallProgress) => void
+  onProgress?: (p: InstallProgress) => void,
+  external?: AbortSignal
 ): Promise<AdmZip> {
   const abort = new AbortController();
   let idle: ReturnType<typeof setTimeout> | null = null;
@@ -447,9 +492,13 @@ async function downloadZip(
     idle = setTimeout(() => abort.abort(new Error(ERR.downloadStalled)), ENDPOINTS.limits.idleMs);
   };
 
+  // Deux raisons d'arrêter : l'inactivité, et le joueur qui annule. Le signal
+  // combiné laisse distinguer les deux au moment de rendre l'erreur.
+  const signal = external ? AbortSignal.any([abort.signal, external]) : abort.signal;
+
   try {
     bump();
-    const res = await fetchAllowed(url, abort.signal);
+    const res = await fetchAllowed(url, signal);
     if (!res.ok) fail(ERR.download, String(res.status));
 
     // Content-Length n'engage à rien, mais quand il annonce déjà trop gros,
@@ -477,8 +526,13 @@ async function downloadZip(
     }
     return new AdmZip(Buffer.concat(chunks));
   } catch (e) {
-    // Un abandon sur inactivité ressort en AbortError : on lui rend son sens.
-    if (e instanceof Error && e.name === "AbortError") fail(ERR.downloadStalled);
+    if (e instanceof Error && e.name === "AbortError") {
+      // Deux abandons possibles : celui du joueur, et celui de l'inactivité.
+      // Les confondre afficherait « le téléchargement ne répond plus » à
+      // quelqu'un qui vient de cliquer sur Annuler.
+      if (external?.aborted) fail(ERR.canceled);
+      fail(ERR.downloadStalled);
+    }
     throw e;
   } finally {
     if (idle) clearTimeout(idle);
@@ -564,7 +618,8 @@ async function extractInto(
   zip: AdmZip,
   target: string,
   stripRoot: boolean,
-  onProgress?: (p: InstallProgress) => void
+  onProgress?: (p: InstallProgress) => void,
+  signal?: AbortSignal
 ): Promise<number> {
   const files = zip.getEntries().filter((e) => !e.isDirectory);
   let written = 0;
@@ -582,6 +637,10 @@ async function extractInto(
   let bytes = 0;
 
   for (const entry of files) {
+    // Entre deux fichiers : c'est le seul endroit où couper proprement, une
+    // écriture en cours n'est pas interruptible.
+    if (signal?.aborted) fail(ERR.canceled);
+
     const rel = stripRoot
       ? entry.entryName.split("/").slice(1).join("/")
       : entry.entryName;
@@ -613,7 +672,7 @@ export const camouflageInstaller: Installer = {
     const dest = await this.resolveDestination(config);
     await fs.mkdir(dest, { recursive: true });
 
-    const zip = await downloadZip(skin.file.link, skin.file.size, opts?.onProgress);
+    const zip = await downloadZip(skin.file.link, skin.file.size, opts?.onProgress, opts?.signal);
     const { needsWrapper } = analyzeArchive(zip);
 
     const name = safeFolderName(opts?.folderName?.trim() || suggestedName(skin));
@@ -626,7 +685,7 @@ export const camouflageInstaller: Installer = {
     // laisserait sinon des fichiers non suivis, invisibles du désinstall.
     let written: number;
     try {
-      written = await extractInto(zip, skinPath, !needsWrapper, opts?.onProgress);
+      written = await extractInto(zip, skinPath, !needsWrapper, opts?.onProgress, opts?.signal);
     } catch (e) {
       await fs.rm(skinPath, { recursive: true, force: true });
       throw e;
@@ -747,6 +806,32 @@ export function setVehicleIds(ids: Iterable<string>): void {
   vehicleIds = new Set([...ids].map((v) => v.toLowerCase()));
 }
 
+/**
+ * Retire une liste de fichiers, puis les dossiers qu'ils laissent vides.
+ *
+ * Sert au retrait comme à l'annulation. On ne supprime jamais un dossier
+ * entier : `all_tanks` et les dossiers de véhicules sont partagés entre
+ * paquets, en effacer un emporterait le travail d'un autre auteur.
+ */
+async function removeFiles(dest: string, relatives: string[]): Promise<void> {
+  for (const rel of relatives) {
+    try {
+      await fs.rm(ensureInside(dest, path.resolve(dest, rel)), { force: true });
+    } catch {
+      // Chemin hors périmètre ou fichier déjà disparu : on continue.
+    }
+  }
+  const dirs = [...new Set(relatives.map((f) => path.dirname(f)).filter((d) => d && d !== "."))];
+  for (const d of dirs) {
+    try {
+      const target = ensureInside(dest, path.resolve(dest, d));
+      if ((await fs.readdir(target)).length === 0) await fs.rmdir(target);
+    } catch {
+      /* dossier non vide ou déjà retiré */
+    }
+  }
+}
+
 export const sightInstaller: Installer = {
   contentType: "sight",
 
@@ -760,7 +845,7 @@ export const sightInstaller: Installer = {
     const dest = await this.resolveDestination(config);
     await fs.mkdir(dest, { recursive: true });
 
-    const zip = await downloadZip(skin.file.link, skin.file.size, opts?.onProgress);
+    const zip = await downloadZip(skin.file.link, skin.file.size, opts?.onProgress, opts?.signal);
     const entries = zip.getEntries().map((e) => e.entryName);
     const plan = planSightLayout(entries, vehicleIds ?? new Set());
     // Poser un viseur au mauvais endroit ne se voit pas : il n'apparaît
@@ -772,6 +857,14 @@ export const sightInstaller: Installer = {
     const touched: string[] = [];
 
     for (const entry of files) {
+      if (opts?.signal?.aborted) {
+        // Les viseurs se dispersent parmi des fichiers existants : abandonner
+        // sans retirer ce qui vient d'être posé laisserait un paquet à moitié
+        // installé, que rien ne suivrait.
+        await removeFiles(dest, touched);
+        fail(ERR.canceled);
+      }
+
       let rel = entry.entryName;
       if (plan.strip) {
         if (!rel.toLowerCase().startsWith(plan.strip.toLowerCase())) continue;
@@ -812,28 +905,7 @@ export const sightInstaller: Installer = {
   },
 
   async uninstall(record) {
-    const dest = record.path;
-    const files = (record.meta?.files as string[] | undefined) ?? [];
-    // On ne supprime QUE les fichiers qu'on a posés, jamais un dossier entier :
-    // `all_tanks` et les dossiers de véhicules sont partagés entre paquets.
-    for (const rel of files) {
-      try {
-        const target = ensureInside(dest, path.resolve(dest, rel));
-        await fs.rm(target, { force: true });
-      } catch {
-        // Chemin hors périmètre ou fichier déjà disparu : on continue.
-      }
-    }
-    // Les dossiers laissés vides par ce retrait sont nettoyés, les autres non.
-    const dirs = [...new Set(files.map((f) => path.dirname(f)).filter((d) => d && d !== "."))];
-    for (const d of dirs) {
-      try {
-        const target = ensureInside(dest, path.resolve(dest, d));
-        if ((await fs.readdir(target)).length === 0) await fs.rmdir(target);
-      } catch {
-        /* dossier non vide ou déjà retiré */
-      }
-    }
+    await removeFiles(record.path, (record.meta?.files as string[] | undefined) ?? []);
   },
 };
 

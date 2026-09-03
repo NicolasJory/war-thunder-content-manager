@@ -249,6 +249,28 @@ async function main() {
   assert.deepEqual(splitError("E_EMPTY_ARCHIVE"), { code: "E_EMPTY_ARCHIVE", detail: "" });
   ok("splitError separe le code du detail");
 
+  // Electron enrobe tout ce qui traverse invoke, et le nom du canal contient
+  // deja un ":". Le joueur voyait "Install failed: undefined" a chaque erreur.
+  const wrapped = splitError(
+    "Error invoking remote method 'content:install': Error: E_CANCELED"
+  );
+  assert.equal(wrapped.code, ERR.canceled, "code perdu dans l'enrobage IPC");
+  const wrappedDetail = splitError(
+    "Error invoking remote method 'content:install': Error: E_DOWNLOAD: 503"
+  );
+  assert.equal(wrappedDetail.code, ERR.download);
+  assert.equal(wrappedDetail.detail, "503", "detail perdu dans l'enrobage IPC");
+  ok("un code enrobe par l'IPC d'Electron reste reconnu et traduit");
+
+  // tError passe au traducteur un code venu du main, via un cast : une cle
+  // absente doit revenir telle quelle, jamais en "undefined".
+  assert.equal(
+    translator("en")("E_JAMAIS_VU" as Key),
+    "E_JAMAIS_VU",
+    "une cle inconnue rend undefined au lieu d'elle-meme"
+  );
+  ok("une cle inconnue revient telle quelle et non en undefined");
+
   // Un vrai appel doit lever un CODE, pas une phrase.
   await assert.rejects(
     () => fetchPage({ content: "banana" as never }),

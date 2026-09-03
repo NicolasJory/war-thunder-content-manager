@@ -46,6 +46,12 @@ export interface Endpoints {
     maxEntries: number;
     idleMs: number;
     maxRedirects: number;
+    /** Délai d'attente d'un appel d'API, hors téléchargement d'archive. */
+    apiTimeoutMs: number;
+    /** Réessais après un échec réseau ou une erreur serveur. */
+    retries: number;
+    /** Attente avant le premier réessai ; elle double ensuite. */
+    retryBaseMs: number;
   };
 }
 
@@ -80,6 +86,11 @@ export const DEFAULT_ENDPOINTS: Endpoints = {
     maxEntries: 20_000,
     idleMs: 60_000,
     maxRedirects: 5,
+    apiTimeoutMs: 15_000,
+    // Deux réessais, pas plus : l'API n'est pas officielle, insister serait
+    // impoli et ne réparerait pas une panne durable.
+    retries: 2,
+    retryBaseMs: 700,
   },
 };
 

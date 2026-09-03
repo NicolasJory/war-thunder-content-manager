@@ -32,6 +32,7 @@ import { LANGS, LOCALE, loadLang, saveLang, translator, type Key, type Lang, typ
 import { splitError } from "../../shared/errors";
 import { setSiteHosts } from "../../shared/deepLink";
 import { useFocusTrap } from "./useFocusTrap";
+import { IconClose } from "./icons";
 
 type Toast = { id: number; msg: string; kind: "ok" | "err" };
 
@@ -184,7 +185,11 @@ export function ShellProvider({
         onInstalledChange([...installed.filter((r) => r.lang_group !== rec.lang_group), rec]);
         notify(t("installedToast", { name: rec.name }));
       } catch (e) {
-        notify(t("installFailed", { reason: tError((e as Error).message) }), "err");
+        // Une annulation n'est pas un échec : dire « échec de l'installation »
+        // à quelqu'un qui vient de cliquer sur Annuler serait absurde.
+        const { code } = splitError(String((e as Error)?.message ?? ""));
+        if (code === "E_CANCELED") notify(t("installCanceled"));
+        else notify(t("installFailed", { reason: tError((e as Error).message) }), "err");
       } finally {
         busyRef.current = null;
         setBusyId(null);
@@ -442,8 +447,16 @@ function pct(p: Progress): number {
  * droite — en octets pendant le transfert, en pourcentage à l'extraction, où
  * compter des fichiers ne dirait rien à personne.
  */
-function Progress({ live, phase }: { live: Progress | null; phase: string }) {
-  const { locale } = useShell();
+function Progress({
+  live,
+  phase,
+  onCancel,
+}: {
+  live: Progress | null;
+  phase: string;
+  onCancel?: () => void;
+}) {
+  const { locale, t } = useShell();
   const width = live ? pct(live) : 3;
   const right = live?.total
     ? live.phase === "download"
@@ -454,7 +467,14 @@ function Progress({ live, phase }: { live: Progress | null; phase: string }) {
     <div className="progress-wrap full">
       <div className="progress-head">
         <span>{phase}</span>
-        <span>{right}</span>
+        <span className="progress-right">
+          {right}
+          {onCancel && (
+            <button className="progress-cancel" onClick={onCancel} title={t("cancelInstall")}>
+              <IconClose size={9} />
+            </button>
+          )}
+        </span>
       </div>
       <div className="progress-track">
         <div className="progress-bar" style={{ width: `${width}%` }} />
@@ -482,7 +502,13 @@ export function InstallButton({
 
   if (installing) {
     const live = progress?.id === skin.id ? progress : null;
-    return <Progress live={live} phase={live?.phase === "extract" ? t("extracting") : t("downloading")} />;
+    return (
+      <Progress
+        live={live}
+        phase={live?.phase === "extract" ? t("extracting") : t("downloading")}
+        onCancel={() => api.content.cancelInstall(skin.id)}
+      />
+    );
   }
 
   if (removing) {

@@ -80,6 +80,7 @@ npm run dev
 | `npm run smoke:validate` | IPC boundary validation, incoming links, endpoint manifest |
 | `npm run smoke:sight` | Sight install against your real sights folder |
 | `npm run smoke:config` | Steam detection, persistence |
+| `npm run smoke:network` | Retries, timeouts and backoff, against a local failing server |
 
 The tests hit the live API and download real archives. They are slow and depend on the network, on purpose: a suite that only talks to mocks would never notice the API changing under it.
 

@@ -33,6 +33,7 @@ const api = {
     install: (content: string, skin: unknown, folderName?: string) =>
       ipcRenderer.invoke("content:install", content, skin, folderName),
     uninstall: (record: unknown) => ipcRenderer.invoke("content:uninstall", record),
+    cancelInstall: (id: number) => ipcRenderer.invoke("content:cancelInstall", id),
     refreshInstalled: () => ipcRenderer.invoke("content:refreshInstalled"),
     foreign: () => ipcRenderer.invoke("content:foreign"),
 

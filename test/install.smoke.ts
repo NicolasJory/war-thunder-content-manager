@@ -333,6 +333,40 @@ async function main() {
   assert.equal(suggestedName({ file: { name: "Su 25 Anime.zip" } } as never), "Su 25 Anime");
   ok("suggestedName propose le nom de l'archive nettoye");
 
+  console.log("\n[5b] Annulation en cours d'install");
+  // Le joueur qui annule ne doit pas se retrouver avec un dossier a moitie
+  // ecrit dans son jeu. On coupe aux deux phases : pendant le telechargement,
+  // puis pendant l'extraction, quand des fichiers sont deja poses sur le disque.
+  for (const phase of ["download", "extract"] as const) {
+    await sleep();
+    const abort = new AbortController();
+    let cut = false;
+
+    const run = getInstaller("camouflage").install(clean, config, {
+      folderName: `annule-${phase}`,
+      signal: abort.signal,
+      onProgress: (p) => {
+        if (!cut && p.phase === phase && p.loaded > 0) {
+          cut = true;
+          abort.abort();
+        }
+      },
+    });
+
+    let message = "aucune erreur";
+    try {
+      await run;
+    } catch (e) {
+      message = String((e as Error).message);
+    }
+
+    assert(cut, `phase ${phase} jamais atteinte : rien n'a ete annule`);
+    assert(message.includes("E_CANCELED"), `${phase} : attendu E_CANCELED, recu ${message}`);
+    const residu = existsSync(dest) ? readdirSync(dest) : [];
+    assert.equal(residu.length, 0, `${phase} : residu dans UserSkins -> ${residu.join(", ")}`);
+    ok(`annulation pendant ${phase} : E_CANCELED et aucun residu dans UserSkins`);
+  }
+
   console.log("\n[6] Whitelist des types de contenu");
   assert.throws(() => getInstaller("banana" as never), /E_UNKNOWN_CONTENT/);
   ok("un content inconnu leve au lieu de renvoyer le feed melange");

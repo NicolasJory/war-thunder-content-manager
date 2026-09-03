@@ -63,6 +63,9 @@ const en = {
   installNameTaken: "A folder with this name already exists and will be replaced.",
   installNameInvalid: "This name cannot be used.",
   cancel: "Cancel",
+  cancelInstall: "Cancel this install",
+  installCanceled: "Install cancelled.",
+  E_CANCELED: "Install cancelled.",
   confirm: "Confirm",
 
   // Recherche et filtres
@@ -256,6 +259,9 @@ const fr: Record<Key, string> = {
   installNameTaken: "Un dossier de ce nom existe déjà et sera remplacé.",
   installNameInvalid: "Ce nom ne peut pas être utilisé.",
   cancel: "Annuler",
+  cancelInstall: "Annuler cette installation",
+  installCanceled: "Installation annulée.",
+  E_CANCELED: "Installation annulée.",
   confirm: "Confirmer",
 
   hashtag: "Hashtag",
@@ -445,6 +451,9 @@ const ru: Record<Key, string> = {
   installNameTaken: "Папка с таким именем уже существует и будет заменена.",
   installNameInvalid: "Такое имя использовать нельзя.",
   cancel: "Отмена",
+  cancelInstall: "Отменить установку",
+  installCanceled: "Установка отменена.",
+  E_CANCELED: "Установка отменена.",
   confirm: "Подтвердить",
 
   hashtag: "Хэштег",
@@ -631,6 +640,9 @@ const zh: Record<Key, string> = {
   installNameTaken: "同名文件夹已存在，将被替换。",
   installNameInvalid: "无法使用该名称。",
   cancel: "取消",
+  cancelInstall: "取消此次安装",
+  installCanceled: "安装已取消。",
+  E_CANCELED: "安装已取消。",
   confirm: "确认",
 
   hashtag: "话题标签",
@@ -822,7 +834,12 @@ export function interpolate(template: string, vars?: Vars): string {
 
 export function translator(lang: Lang) {
   const dict = DICTS[lang] ?? DICTS.en;
-  return (key: Key, vars?: Vars): string => interpolate(dict[key] ?? DICTS.en[key], vars);
+  // Repli sur la clé : tError lui passe un code venu du main via un cast, donc
+  // une clé absente des quatre dictionnaires est possible à l'exécution. Rendre
+  // la clé laisse tError montrer le message d'origine ; rendre undefined
+  // affichait « undefined » au joueur.
+  return (key: Key, vars?: Vars): string =>
+    interpolate(dict[key] ?? DICTS.en[key] ?? key, vars);
 }
 
 export type T = ReturnType<typeof translator>;

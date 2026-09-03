@@ -330,6 +330,15 @@ function registerIpc() {
     await shell.openExternal(parsed.toString());
   });
 
+  /*
+   * Installations en cours, indexées par l'identifiant du contenu.
+   *
+   * Le renderer barre déjà un second clic, mais il ne peut pas garantir qu'une
+   * installation soit annulable : seul le main tient le signal qui coupe le
+   * téléchargement et l'extraction.
+   */
+  const running = new Map<number, AbortController>();
+
   ipcMain.handle(
     "content:install",
     async (e, content: unknown, rawSkin: unknown, folderName?: unknown) => {
@@ -338,14 +347,24 @@ function registerIpc() {
       // config.json, donc rien d'arbitraire ne doit y entrer.
       const skin = asSkin(rawSkin) as Skin;
       const name = folderName === undefined ? undefined : asString(folderName, 200);
-      const record = await getInstaller(asString(content, 32) as ContentType).install(skin, cfg, {
-        folderName: name,
-        // Le rendu est limité à ~20 messages par seconde : un gros zip génère
-        // des centaines de ticks, inutile de tous les faire traverser l'IPC.
-        onProgress: throttle((p) => {
-          if (!e.sender.isDestroyed()) e.sender.send("install:progress", { id: skin.id, ...p });
-        }),
-      });
+
+      const abort = new AbortController();
+      running.set(skin.id, abort);
+
+      let record;
+      try {
+        record = await getInstaller(asString(content, 32) as ContentType).install(skin, cfg, {
+          folderName: name,
+          signal: abort.signal,
+          // Le rendu est limité à ~20 messages par seconde : un gros zip génère
+          // des centaines de ticks, inutile de tous les faire traverser l'IPC.
+          onProgress: throttle((p) => {
+            if (!e.sender.isDestroyed()) e.sender.send("install:progress", { id: skin.id, ...p });
+          }),
+        });
+      } finally {
+        running.delete(skin.id);
+      }
 
       // Dédoublonnage : réinstaller un skin déjà présent ne crée pas un doublon
       // de suivi qui laisserait un dossier orphelin à la désinstallation.
@@ -359,6 +378,13 @@ function registerIpc() {
       return record;
     }
   );
+
+  /** Coupe une installation en cours. Sans effet si elle est déjà terminée. */
+  ipcMain.handle("content:cancelInstall", (_e, id: unknown) => {
+    const controller = running.get(asIndex(id, 100_000_000));
+    controller?.abort();
+    return Boolean(controller);
+  });
 
   /**
    * Le renderer ne désigne QUE quoi désinstaller, jamais quoi supprimer.

@@ -64,6 +64,7 @@ interface Api {
     }): Promise<Page>;
     install(content: ContentType, skin: Skin, folderName?: string): Promise<InstalledRecord>;
     uninstall(record: InstalledRecord): Promise<void>;
+    cancelInstall(id: number): Promise<boolean>;
     refreshInstalled(): Promise<InstalledRecord[]>;
     foreign(): Promise<ForeignFolder[]>;
     onProgress(cb: (p: Progress) => void): () => void;

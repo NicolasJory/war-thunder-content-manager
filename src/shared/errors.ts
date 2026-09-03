@@ -29,6 +29,7 @@ export const ERR = {
   noInstaller: "E_NO_INSTALLER",
   badArgs: "E_BAD_ARGS",
   tooFast: "E_TOO_FAST",
+  canceled: "E_CANCELED",
   noSightsDir: "E_NO_SIGHTS_DIR",
   unknownLayout: "E_UNKNOWN_LAYOUT",
   notInstalled: "E_NOT_INSTALLED",
@@ -46,8 +47,20 @@ export function fail(code: string, detail?: string): never {
   throw new Error(detail ? `${code}: ${detail}` : code);
 }
 
-/** Sépare `CODE: détail` pour que le renderer traduise le code seul. */
+/**
+ * Sépare `CODE: détail` pour que le renderer traduise le code seul.
+ *
+ * Le code n'est pas toujours en tête : Electron enrobe ce qui traverse
+ * `invoke` en `Error invoking remote method 'content:install': Error: E_X`.
+ * Découper au premier `:` tombait sur celui du canal IPC, et aucune erreur
+ * n'était plus traduite. On cherche donc le code lui-même.
+ */
 export function splitError(message: string): { code: string; detail: string } {
+  const found = /\b[EV]_[A-Z0-9_]+/.exec(message);
+  if (found) {
+    const rest = message.slice(found.index + found[0].length);
+    return { code: found[0], detail: rest.startsWith(":") ? rest.slice(1).trim() : "" };
+  }
   const i = message.indexOf(":");
   if (i === -1) return { code: message.trim(), detail: "" };
   return { code: message.slice(0, i).trim(), detail: message.slice(i + 1).trim() };
