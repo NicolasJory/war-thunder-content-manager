@@ -506,11 +506,28 @@ code {
 
 /* ------------------------- Barre de filtres ------------------------- */
 
+/* Six colonnes fixes coupaient les libellés longs (« Часто комментируемые »)
+   et faisaient déborder la page sous 1100 px. auto-fit replie la barre au lieu
+   de la serrer ; le champ hashtag prend deux colonnes parce qu'il porte aussi
+   son bouton. */
 .toolbar {
   display: grid;
-  grid-template-columns: minmax(210px, 1.2fr) minmax(140px, 0.8fr) repeat(4, minmax(115px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
   gap: 10px;
   align-items: end;
+}
+.toolbar > .combo:first-child {
+  grid-column: span 2;
+}
+/* La barre des installés n'a que deux champs. La grille à six colonnes de la
+   recherche les écrasait contre le bord gauche, et « Сначала самые большие »
+   s'y tronquait en « Сначала самые ». */
+.toolbar.compact {
+  grid-template-columns: minmax(210px, 340px) minmax(170px, 240px);
+  justify-content: start;
+}
+.toolbar.compact > .combo:first-child {
+  grid-column: auto;
 }
 .combo {
   min-width: 0;
