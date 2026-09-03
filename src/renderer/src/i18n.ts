@@ -32,6 +32,7 @@ const en = {
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "Camouflages",
+  contentType: "Content",
 
   // Barre latérale
   tabBrowse: "Browse",
@@ -203,6 +204,8 @@ const en = {
   E_UNKNOWN_CONTENT: "Unknown content type.",
   E_UNKNOWN_SORT: "Unknown sort order.",
   E_NO_INSTALLER: "This content type cannot be installed yet.",
+  E_NO_SIGHTS_DIR: "Could not find your War Thunder sights folder. Launch the game once so it creates it.",
+  E_UNKNOWN_LAYOUT: "This archive is not laid out in a way the app can place. Install it by hand if you need it.",
   E_BAD_ARGS: "The application sent a malformed request. Nothing was changed.",
   E_TOO_FAST: "Too many links opened at once. Try again in a moment.",
   E_NOT_INSTALLED:
@@ -224,6 +227,7 @@ const fr: Record<Key, string> = {
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "Camouflages",
+  contentType: "Contenu",
 
   tabBrowse: "Parcourir",
   tabInstalled: "Installés",
@@ -390,6 +394,8 @@ const fr: Record<Key, string> = {
   E_UNKNOWN_CONTENT: "Type de contenu inconnu.",
   E_UNKNOWN_SORT: "Tri inconnu.",
   E_NO_INSTALLER: "Ce type de contenu n'est pas encore installable.",
+  E_NO_SIGHTS_DIR: "Dossier des viseurs introuvable. Lance le jeu une fois pour qu'il le crée.",
+  E_UNKNOWN_LAYOUT: "Cette archive n'a pas une structure que l'application sache placer. Installe-la à la main si tu y tiens.",
   E_BAD_ARGS: "L'application a envoyé une requête malformée. Rien n'a été modifié.",
   E_TOO_FAST: "Trop de liens ouverts d'un coup. Réessaie dans un instant.",
   E_NOT_INSTALLED:
@@ -409,6 +415,8 @@ const ru: Record<Key, string> = {
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "Камуфляжи",
+  contentType: "Содержимое",
+
 
   tabBrowse: "Обзор",
   tabInstalled: "Установленные",
@@ -573,6 +581,8 @@ const ru: Record<Key, string> = {
   E_UNKNOWN_CONTENT: "Неизвестный тип содержимого.",
   E_UNKNOWN_SORT: "Неизвестный порядок сортировки.",
   E_NO_INSTALLER: "Этот тип содержимого пока нельзя установить.",
+  E_NO_SIGHTS_DIR: "Папка прицелов не найдена. Запустите игру один раз, чтобы она её создала.",
+  E_UNKNOWN_LAYOUT: "Структуру этого архива приложение разместить не умеет. При необходимости установите вручную.",
   E_BAD_ARGS: "Приложение отправило некорректный запрос. Ничего не изменено.",
   E_TOO_FAST: "Слишком много ссылок сразу. Повторите через мгновение.",
   E_NOT_INSTALLED:
@@ -592,6 +602,8 @@ const zh: Record<Key, string> = {
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "涂装",
+  contentType: "内容",
+
 
   tabBrowse: "浏览",
   tabInstalled: "已安装",
@@ -746,6 +758,8 @@ const zh: Record<Key, string> = {
   E_UNKNOWN_CONTENT: "未知的内容类型。",
   E_UNKNOWN_SORT: "未知的排序方式。",
   E_NO_INSTALLER: "该内容类型暂时无法安装。",
+  E_NO_SIGHTS_DIR: "找不到瞄准镜文件夹。请先启动一次游戏，让它创建该文件夹。",
+  E_UNKNOWN_LAYOUT: "本应用无法识别该压缩包的结构。如有需要请手动安装。",
   E_BAD_ARGS: "应用发送了格式错误的请求，未做任何更改。",
   E_TOO_FAST: "同时打开的链接过多，请稍后再试。",
   E_NOT_INSTALLED: "本应用未将此内容记录为已安装，因此没有改动任何文件。",

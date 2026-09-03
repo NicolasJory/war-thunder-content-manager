@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { api, type DeepLink, type FavoriteAuthor, type InstalledRecord, type Skin, type WtConfigFile } from "./api";
+import { api, type ContentType, type DeepLink, type FavoriteAuthor, type InstalledRecord, type Skin, type WtConfigFile } from "./api";
 import { AuthorView } from "./AuthorView";
 import { Browse } from "./Browse";
 import { Detail } from "./Detail";
@@ -15,6 +15,7 @@ type Tab = "browse" | "installed" | "favorites";
 
 export default function App() {
   const [config, setConfig] = useState<WtConfigFile | null>(null);
+  const [content, setContent] = useState<ContentType>("camouflage");
 
   useEffect(() => {
     api.config.get().then(setConfig);
@@ -33,7 +34,12 @@ export default function App() {
   }
 
   return (
-    <ShellProvider installed={config.installed} onInstalledChange={setInstalled}>
+    <ShellProvider
+      installed={config.installed}
+      onInstalledChange={setInstalled}
+      content={content}
+      onContent={setContent}
+    >
       <Shell config={config} onConfig={setConfig} />
     </ShellProvider>
   );
@@ -46,7 +52,7 @@ function Shell({
   config: WtConfigFile;
   onConfig: (c: WtConfigFile) => void;
 }) {
-  const { t, toasts, notify } = useShell();
+  const { t, toasts, notify, content, setContent } = useShell();
   const [editingDir, setEditingDir] = useState(false);
   const [tab, setTab] = useState<Tab>("browse");
   const [author, setAuthor] = useState<Author | null>(null);
@@ -66,7 +72,7 @@ function Shell({
    * parent essayait de la lire.
    */
   const scrolls = useRef<Record<string, number>>({});
-  const viewKey = author ? `author:${author.id}` : tab;
+  const viewKey = author ? `author:${author.id}` : `${content}:${tab}`;
 
   /*
    * Liens entrants. Trois chemins mènent ici : le protocole `wtcm://`, un
@@ -173,6 +179,19 @@ function Shell({
     });
   };
 
+  /** Changer de type remet la recherche à zéro : un hashtag de camouflage
+   *  n'a pas de sens sur les viseurs, et les filtres véhicule non plus. */
+  const switchContent = (next: ContentType) => {
+    if (next === content) return;
+    goTo(() => {
+      setOpenSkin(null);
+      setAuthor(null);
+      setTab("browse");
+      setTerm("");
+      setContent(next);
+    });
+  };
+
   const go = (next: Tab) => {
     goTo(() => {
       setAuthor(null);
@@ -199,7 +218,9 @@ function Shell({
           >
             <IconDownload size={16} />
             {t("tabInstalled")}
-            <span className="nav-count">{config.installed.length}</span>
+            <span className="nav-count">
+              {config.installed.filter((r) => r.contentType === content).length}
+            </span>
           </button>
           <button
             className={tab === "favorites" && !author ? "nav-item active" : "nav-item"}
@@ -211,17 +232,28 @@ function Shell({
           </button>
         </nav>
 
-        {/* Les types à venir sont montrés désactivés : le brief prévoit viseurs
-            et mods son, et l'architecture d'install les accueille déjà. */}
-        <div className="nav-head">{t("soon")}</div>
+        <div className="nav-head">{t("contentType")}</div>
         <nav className="nav">
-          <button className="nav-item" disabled>
+          <button
+            className={content === "camouflage" ? "nav-item active" : "nav-item"}
+            onClick={() => switchContent("camouflage")}
+          >
+            <IconSearch size={16} />
+            {t("contentCamouflages")}
+          </button>
+          <button
+            className={content === "sight" ? "nav-item active" : "nav-item"}
+            onClick={() => switchContent("sight")}
+          >
             <IconSight size={16} />
             {t("navSights")}
           </button>
-          <button className="nav-item" disabled>
+          {/* Les mods son demandent en plus de patcher config.blk : l'entrée
+              reste visible pour dire qu'ils arrivent, sans faire croire. */}
+          <button className="nav-item" disabled title={t("soon")}>
             <IconSound size={16} />
             {t("navSounds")}
+            <span className="nav-count">{t("soon")}</span>
           </button>
         </nav>
 

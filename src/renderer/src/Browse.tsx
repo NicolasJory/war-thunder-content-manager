@@ -24,8 +24,6 @@ import { CardSkeletons, SkinCard } from "./SkinCard";
 import { useShell } from "./shell";
 import { parseDeepLink } from "../../shared/deepLink";
 
-const CONTENT: ContentType = "camouflage";
-
 /**
  * Libellés des quatre filtres. Ils viennent de NOUS, pas de l'API.
  *
@@ -221,7 +219,7 @@ interface Props {
 }
 
 export function Browse({ onOpen, onAuthor, term, onTerm, onLink }: Props) {
-  const { t } = useShell();
+  const { t, content } = useShell();
   const [taxonomy, setTaxonomy] = useState<Taxonomy | null>(null);
   const [taxonomyError, setTaxonomyError] = useState(false);
   const [sel, setSel] = useState<Selection>({});
@@ -234,10 +232,10 @@ export function Browse({ onOpen, onAuthor, term, onTerm, onLink }: Props) {
 
   useEffect(() => {
     api.content
-      .filters(CONTENT)
+      .filters(content)
       .then(setTaxonomy)
       .catch(() => setTaxonomyError(true));
-  }, []);
+  }, [content]);
 
   const applied = term ? `#${term}` : "";
 
@@ -257,11 +255,11 @@ export function Browse({ onOpen, onAuthor, term, onTerm, onLink }: Props) {
   }
 
   // Tout ce qui doit relancer la liste tient dans cette cle.
-  const feedKey = JSON.stringify([applied, sort, sel]);
+  const feedKey = JSON.stringify([content, applied, sort, sel]);
   const feed = useInfiniteFeed(feedKey, (page) =>
     api.content
       .search({
-        content: CONTENT,
+        content,
         sort,
         page,
         searchString: applied,

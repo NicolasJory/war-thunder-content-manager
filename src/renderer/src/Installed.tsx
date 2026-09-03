@@ -37,7 +37,7 @@ export function Installed({
   onOpen: (skin: Skin) => void;
   onAuthor: (skin: Skin) => void;
 }) {
-  const { t, locale, notify, tError, requestInstall } = useShell();
+  const { t, locale, notify, tError, requestInstall, content } = useShell();
   const [fetched, setFetched] = useState<Record<number, Skin>>({});
   const [busy, setBusy] = useState(false);
   const [foreign, setForeign] = useState<ForeignFolder[]>([]);
@@ -52,9 +52,12 @@ export function Installed({
     return () => {
       alive = false;
     };
-  }, [records.length]);
+  }, [records.length, content]);
 
-  const missing = records.filter((r) => !r.snapshot && !fetched[r.lang_group]);
+  // Seuls les contenus du type affiché : la barre latérale sépare les vues.
+  const shown = records.filter((r) => r.contentType === content);
+
+  const missing = shown.filter((r) => !r.snapshot && !fetched[r.lang_group]);
 
   useEffect(() => {
     if (missing.length === 0) return;
@@ -90,9 +93,9 @@ export function Installed({
     }
   }, [onRecords, notify, tError]);
 
-  const bytes = records.reduce((sum, r) => sum + (r.snapshot?.file.size ?? 0), 0);
-  const checked = records.reduce((max, r) => Math.max(max, r.refreshedAt ?? 0), 0);
-  const updates = records.filter(hasUpdate).length;
+  const bytes = shown.reduce((sum, r) => sum + (r.snapshot?.file.size ?? 0), 0);
+  const checked = shown.reduce((max, r) => Math.max(max, r.refreshedAt ?? 0), 0);
+  const updates = shown.filter(hasUpdate).length;
 
   return (
     <div className="content">
@@ -100,14 +103,14 @@ export function Installed({
         <div>
           <h2>{t("installedTitle")}</h2>
           <p>
-            {records.length > 0
-              ? `${t("installedCount", { n: records.length, size: formatSize(bytes, locale) })} · `
+            {shown.length > 0
+              ? `${t("installedCount", { n: shown.length, size: formatSize(bytes, locale) })} · `
               : ""}
             {t("installedEmptyHelp")}
           </p>
         </div>
 
-        {records.length > 0 && (
+        {shown.length > 0 && (
           <div className="head-actions">
             <span className="muted checked">
               {t("lastChecked", {
@@ -134,14 +137,14 @@ export function Installed({
         </p>
       )}
 
-      {records.length === 0 ? (
+      {shown.length === 0 ? (
         <div className="empty">
           <p className="title">{t("installedEmpty")}</p>
           <p className="muted">{t("installedEmptyHelp")}</p>
         </div>
       ) : (
         <div className="grid">
-          {records.map((record) => {
+          {shown.map((record) => {
             const skin = record.snapshot ?? fetched[record.lang_group];
             return skin ? (
               <div key={record.lang_group} className="installed-card">

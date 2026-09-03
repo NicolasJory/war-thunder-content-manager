@@ -15,6 +15,7 @@ Doing this by hand means downloading an archive, unzipping it, and dropping the 
 - One-click install, and you choose the folder name the game will show
 - Tracks what you installed and flags content republished since
 - Author favourites, shareable links, and links that open straight in the app
+- Camouflages and gun sights, switched from the sidebar
 - Interface in English, French, Russian and Simplified Chinese
 
 The app finds your Steam installation on first launch. It never touches folders it did not create: Gaijin's templates and camouflages you placed by hand stay untouched, and appear read-only.
@@ -77,6 +78,7 @@ npm run dev
 | `npm run smoke:real` | Same, against your real game folder, checking it comes back untouched |
 | `npm run smoke:ui` | Filters, translations, description parsing |
 | `npm run smoke:validate` | IPC boundary validation, incoming links, endpoint manifest |
+| `npm run smoke:sight` | Sight install against your real sights folder |
 | `npm run smoke:config` | Steam detection, persistence |
 
 The tests hit the live API and download real archives. They are slow and depend on the network, on purpose: a suite that only talks to mocks would never notice the API changing under it.
@@ -120,7 +122,9 @@ Each field is validated on its own. A half-wrong file keeps the defaults for wha
 
 **Vehicle filter values stay in English** across all four languages. They come from the API, over a taxonomy of more than 3,000 entries that shifts with every game update.
 
-**Sights and sound mods are not installable yet.** The architecture has room for them; the work is still to do.
+**Sound mods are not installable yet.** They also need `config.blk` patched and reverted, which the other content types do not.
+
+**Some sight archives get turned down.** The app reads the archive layout by matching folder names against Live's vehicle taxonomy, which covers every pack tested so far. An archive laid out some other way is refused rather than guessed at: a sight dropped in the wrong folder never shows up in game, and you would have no way to tell why.
 
 ## Contributing
 

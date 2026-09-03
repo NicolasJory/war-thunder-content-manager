@@ -30,7 +30,7 @@ export function AuthorView({
   onOpen: (skin: Skin) => void;
   onTag: (tag: string) => void;
 }) {
-  const { t } = useShell();
+  const { t, content } = useShell();
   const [sort, setSort] = useState<SortKey>("created");
   const gridRef = useRef<HTMLDivElement>(null);
   const hover = useHoverTarget();
@@ -38,10 +38,10 @@ export function AuthorView({
   // `stopOnEmpty` : le filtrage par type peut vider une page pleine sans que ce
   // soit la derniere, donc seule une page vraiment vide arrete le defilement.
   const feed = useInfiniteFeed(
-    JSON.stringify([author.id, sort]),
+    JSON.stringify([content, author.id, sort]),
     (page) =>
       api.content
-        .userPage({ user: author.id, content: "camouflage", sort, page })
+        .userPage({ user: author.id, content, sort, page })
         .then((p) => p.data.list),
     { stopOnEmpty: true }
   );

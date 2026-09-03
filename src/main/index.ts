@@ -36,6 +36,7 @@ import {
   fetchVehicleFont,
   fingerprint,
   setEndpoints,
+  setVehicleIds,
   getInstaller,
   listForeign,
   type ContentType,
@@ -170,16 +171,32 @@ const filtersCache = new Map<ContentType, { at: number; value: unknown }>();
  * Il ne sert que pour les camouflages : c'est le seul type livré, et les autres
  * ont leur propre taxonomie.
  */
+/**
+ * Alimente la reconnaissance des dossiers de véhicules à partir de la
+ * taxonomie. L'installeur de viseurs en a besoin pour lire la structure d'une
+ * archive : les dossiers y portent les identifiants de Live.
+ */
+function feedVehicleIds(taxonomy: unknown): void {
+  const variants = (taxonomy as { vehicle?: { variants?: Array<{ value?: string }> } })?.vehicle
+    ?.variants;
+  if (!Array.isArray(variants)) return;
+  setVehicleIds(
+    variants.map((v) => v.value).filter((v): v is string => typeof v === "string" && v !== "any")
+  );
+}
+
 async function cachedFilters(content: ContentType): Promise<unknown> {
   const hit = filtersCache.get(content);
   if (hit && Date.now() - hit.at < FILTERS_TTL) return hit.value;
   try {
     const value = await fetchFilters(content);
     filtersCache.set(content, { at: Date.now(), value });
+    if (content === "camouflage") feedVehicleIds(value);
     return value;
   } catch (e) {
     if (content !== "camouflage") throw e;
     // On ne met PAS le repli en cache : le prochain appel retentera Live.
+    feedVehicleIds(filtersFallback);
     return filtersFallback;
   }
 }
@@ -500,6 +517,11 @@ if (!primary) {
     setSiteHosts(endpoints.siteHosts);
 
     store = createConfigStore(path.join(userData, "config.json"));
+    // La liste des véhicules sert à lire la structure des archives de viseurs.
+    // On l'amorce depuis le repli embarqué : une installation ne doit pas
+    // dépendre du fait que le joueur ait ouvert la barre de filtres.
+    feedVehicleIds(filtersFallback);
+
     registerIpc();
     createWindow();
 

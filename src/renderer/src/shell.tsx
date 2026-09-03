@@ -36,6 +36,9 @@ import { useFocusTrap } from "./useFocusTrap";
 type Toast = { id: number; msg: string; kind: "ok" | "err" };
 
 interface Shell {
+  /** Type de contenu affiché. Toutes les vues et l'installation le suivent. */
+  content: ContentType;
+  setContent: (c: ContentType) => void;
   lang: Lang;
   /** Locale BCP-47 correspondante, pour Intl. */
   locale: string;
@@ -64,15 +67,19 @@ interface Shell {
 const Ctx = createContext<Shell>(null as unknown as Shell);
 export const useShell = () => useContext(Ctx);
 
-const CONTENT: ContentType = "camouflage";
+
 
 export function ShellProvider({
   installed,
   onInstalledChange,
+  content,
+  onContent,
   children,
 }: {
   installed: InstalledRecord[];
   onInstalledChange: (records: InstalledRecord[]) => void;
+  content: ContentType;
+  onContent: (c: ContentType) => void;
   children: ReactNode;
 }) {
   const [lang, setLangState] = useState<Lang>(loadLang);
@@ -155,9 +162,12 @@ export function ShellProvider({
     };
   }, []);
 
+  // Filtré par type : un même lang_group ne peut pas désigner deux contenus,
+  // mais la comparaison reste juste si Live en réutilisait un jour.
   const recordFor = useCallback(
-    (langGroup: number) => installed.find((r) => r.lang_group === langGroup),
-    [installed]
+    (langGroup: number) =>
+      installed.find((r) => r.lang_group === langGroup && r.contentType === content),
+    [installed, content]
   );
 
   const doInstall = useCallback(
@@ -170,7 +180,7 @@ export function ShellProvider({
       setBusyId(skin.id);
       setProgress(null);
       try {
-        const rec = await api.content.install(CONTENT, skin, folderName);
+        const rec = await api.content.install(content, skin, folderName);
         onInstalledChange([...installed.filter((r) => r.lang_group !== rec.lang_group), rec]);
         notify(t("installedToast", { name: rec.name }));
       } catch (e) {
@@ -181,7 +191,7 @@ export function ShellProvider({
         setProgress(null);
       }
     },
-    [installed, onInstalledChange, notify, t, tError]
+    [installed, onInstalledChange, notify, t, tError, content]
   );
 
   const uninstall = useCallback(
@@ -211,6 +221,8 @@ export function ShellProvider({
   );
 
   const value: Shell = {
+    content,
+    setContent: onContent,
     lang,
     copy,
     locale: LOCALE[lang],

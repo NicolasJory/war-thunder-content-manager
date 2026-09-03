@@ -29,6 +29,8 @@ export const ERR = {
   noInstaller: "E_NO_INSTALLER",
   badArgs: "E_BAD_ARGS",
   tooFast: "E_TOO_FAST",
+  noSightsDir: "E_NO_SIGHTS_DIR",
+  unknownLayout: "E_UNKNOWN_LAYOUT",
   notInstalled: "E_NOT_INSTALLED",
 } as const;
 

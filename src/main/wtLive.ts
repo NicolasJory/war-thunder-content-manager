@@ -24,6 +24,8 @@ import { promises as fs } from "fs";
 import path from "path";
 import { ERR, fail } from "../shared/errors.js";
 import { DEFAULT_ENDPOINTS, type Endpoints } from "../shared/endpoints.js";
+import { planSightLayout } from "./sightLayout.js";
+import { homedir } from "os";
 
 /**
  * Manifeste courant. Toute la surface externe passe par lui : aucune URL, aucun
@@ -692,11 +694,155 @@ export async function listForeign(
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// ------------------------- Implémentation: VISEURS ------------------------- //
+
+/**
+ * Retrouve le dossier des viseurs du compte courant.
+ *
+ * Les viseurs ne vivent pas dans le dossier du jeu mais sous
+ * `Documents/My Games/WarThunder/Saves/<uid>/production/UserSights`, avec un
+ * dossier par compte connecté sur la machine.
+ *
+ * Le brief prévoyait de demander à l'utilisateur en cas d'ambiguïté. Ce n'est
+ * pas nécessaire : le jeu écrit `Saves/lastlogin.blk` contenant
+ * `uid:i64=<identifiant>`, qui désigne le dernier compte utilisé. On s'en sert,
+ * et on ne retombe sur un choix automatique que s'il manque.
+ */
+export async function resolveSightsDir(): Promise<string | null> {
+  const saves = path.join(homedir(), "Documents", "My Games", "WarThunder", "Saves");
+
+  let accounts: string[];
+  try {
+    accounts = (await fs.readdir(saves, { withFileTypes: true }))
+      .filter((e) => e.isDirectory() && /^\d+$/.test(e.name))
+      .map((e) => e.name);
+  } catch {
+    return null; // le jeu n'a jamais été lancé sur cette machine
+  }
+  if (accounts.length === 0) return null;
+
+  let chosen = accounts[0];
+  if (accounts.length > 1) {
+    try {
+      const blk = await fs.readFile(path.join(saves, "lastlogin.blk"), "utf8");
+      const uid = blk.match(/uid\s*:\s*i64\s*=\s*(\d+)/)?.[1];
+      if (uid && accounts.includes(uid)) chosen = uid;
+    } catch {
+      // Pas de lastlogin lisible : on garde le premier compte trouvé plutôt
+      // que d'échouer. Le joueur verra le chemin exact dans l'application.
+    }
+  }
+  return path.join(saves, chosen, "production", "UserSights");
+}
+
+/**
+ * Identifiants de véhicules connus, tirés de la taxonomie embarquée.
+ *
+ * Ils servent à reconnaître la structure d'une archive de viseurs : les
+ * dossiers y portent les mêmes identifiants que ceux de Live.
+ */
+let vehicleIds: Set<string> | null = null;
+
+export function setVehicleIds(ids: Iterable<string>): void {
+  vehicleIds = new Set([...ids].map((v) => v.toLowerCase()));
+}
+
+export const sightInstaller: Installer = {
+  contentType: "sight",
+
+  async resolveDestination() {
+    const dir = await resolveSightsDir();
+    if (!dir) fail(ERR.noSightsDir);
+    return dir;
+  },
+
+  async install(skin, config, opts) {
+    const dest = await this.resolveDestination(config);
+    await fs.mkdir(dest, { recursive: true });
+
+    const zip = await downloadZip(skin.file.link, skin.file.size, opts?.onProgress);
+    const entries = zip.getEntries().map((e) => e.entryName);
+    const plan = planSightLayout(entries, vehicleIds ?? new Set());
+    // Poser un viseur au mauvais endroit ne se voit pas : il n'apparaît
+    // simplement jamais en jeu. Mieux vaut refuser que laisser croire.
+    if (!plan) fail(ERR.unknownLayout, skin.file.name);
+
+    const files = zip.getEntries().filter((e) => !e.isDirectory);
+    let written = 0;
+    const touched: string[] = [];
+
+    for (const entry of files) {
+      let rel = entry.entryName;
+      if (plan.strip) {
+        if (!rel.toLowerCase().startsWith(plan.strip.toLowerCase())) continue;
+        rel = rel.slice(plan.strip.length);
+      }
+      if (!rel || !rel.toLowerCase().endsWith(".blk")) continue;
+      // Cas d'un réticule nu : il n'a pas de dossier, on le range sous all_tanks.
+      if (plan.via === "single-vehicle") {
+        if (rel.includes("/")) continue;
+        rel = `${plan.vehicles[0]}/${rel}`;
+      }
+
+      const out = ensureInside(dest, path.resolve(dest, rel));
+      await fs.mkdir(path.dirname(out), { recursive: true });
+      await fs.writeFile(out, entry.getData());
+      touched.push(rel);
+      written++;
+      opts?.onProgress?.({ phase: "extract", loaded: written, total: files.length });
+    }
+
+    if (written === 0) fail(ERR.emptyArchive);
+
+    const name = safeFolderName(opts?.folderName?.trim() || suggestedName(skin));
+    return {
+      contentType: "sight",
+      lang_group: skin.lang_group,
+      // Les viseurs se dispersent dans des dossiers de véhicules partagés avec
+      // d'autres paquets : on suit chaque fichier posé plutôt qu'un dossier,
+      // sinon la désinstallation emporterait le travail des autres.
+      path: dest,
+      name,
+      installedAt: Date.now(),
+      snapshot: skin,
+      fingerprint: fingerprint(skin),
+      refreshedAt: Date.now(),
+      meta: { files: touched, via: plan.via, rootOnly: plan.rootOnly ?? false },
+    };
+  },
+
+  async uninstall(record) {
+    const dest = record.path;
+    const files = (record.meta?.files as string[] | undefined) ?? [];
+    // On ne supprime QUE les fichiers qu'on a posés, jamais un dossier entier :
+    // `all_tanks` et les dossiers de véhicules sont partagés entre paquets.
+    for (const rel of files) {
+      try {
+        const target = ensureInside(dest, path.resolve(dest, rel));
+        await fs.rm(target, { force: true });
+      } catch {
+        // Chemin hors périmètre ou fichier déjà disparu : on continue.
+      }
+    }
+    // Les dossiers laissés vides par ce retrait sont nettoyés, les autres non.
+    const dirs = [...new Set(files.map((f) => path.dirname(f)).filter((d) => d && d !== "."))];
+    for (const d of dirs) {
+      try {
+        const target = ensureInside(dest, path.resolve(dest, d));
+        if ((await fs.readdir(target)).length === 0) await fs.rmdir(target);
+      } catch {
+        /* dossier non vide ou déjà retiré */
+      }
+    }
+  },
+};
+
 // ------------------------- Registre des installers ------------------------- //
 // Enregistrer ici chaque type supporté. Aujourd'hui : camouflage uniquement.
 // Extensions à brancher (voir brief) : sightInstaller, soundInstaller, …
 export const installers: Partial<Record<ContentType, Installer>> = {
   camouflage: camouflageInstaller,
+  sight: sightInstaller,
 };
 
 export function getInstaller(content: ContentType): Installer {
