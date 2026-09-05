@@ -3,7 +3,7 @@
 [![Latest release](https://img.shields.io/github/v/release/NicolasJory/war-thunder-content-manager)](https://github.com/NicolasJory/war-thunder-content-manager/releases/latest)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 
-Browse the camouflages published on [War Thunder Live](https://live.warthunder.com) and install them into the game with one click.
+Browse the camouflages and gun sights published on [War Thunder Live](https://live.warthunder.com) and install them into the game with one click.
 
 Doing this by hand means downloading an archive, unzipping it, and dropping the folder in the right place inside your game files. The app handles those three steps, and removes cleanly whatever it installed.
 
@@ -14,7 +14,7 @@ Doing this by hand means downloading an archive, unzipping it, and dropping the 
 - Detail sheet with a zoomable gallery, stats and description
 - One-click install, and you choose the folder name the game will show
 - Tracks what you installed and flags content republished since
-- Author favourites, shareable links, and links that open straight in the app
+- Author favourites, with a feed of what they published last, plus shareable links that open straight in the app
 - Camouflages and gun sights, switched from the sidebar
 - Interface in English, French, Russian and Simplified Chinese
 
@@ -47,7 +47,7 @@ The binaries carry no code signature. A certificate runs several hundred euros a
 
 ## What the app does with your data
 
-Nothing leaves your machine. There is no account, no telemetry and no server in between: the app talks to War Thunder Live directly, and writes only into your game's `UserSkins` folder.
+Nothing leaves your machine. There is no account, no telemetry and no server in between: the app talks to War Thunder Live directly. It writes camouflages into your game's `UserSkins` folder, and sights into `Documents\My Games\WarThunder\Saves\<your account>\production\UserSights`, which is where the game reads them from.
 
 Installed content is visible to you alone, locally. The game server never sees it.
 
