@@ -163,12 +163,14 @@ export function ShellProvider({
     };
   }, []);
 
-  // Filtré par type : un même lang_group ne peut pas désigner deux contenus,
-  // mais la comparaison reste juste si Live en réutilisait un jour.
+  // Un même lang_group ne désigne jamais deux contenus, même de types
+  // différents : pas besoin de filtrer par type actif pour le retrouver.
+  // Nécessaire depuis que l'onglet Installés montre tous les types ensemble —
+  // un filtre par `content` y faisait chercher un sight sous le type
+  // camouflage actif, donc jamais le trouver.
   const recordFor = useCallback(
-    (langGroup: number) =>
-      installed.find((r) => r.lang_group === langGroup && r.contentType === content),
-    [installed, content]
+    (langGroup: number) => installed.find((r) => r.lang_group === langGroup),
+    [installed]
   );
 
   const doInstall = useCallback(
