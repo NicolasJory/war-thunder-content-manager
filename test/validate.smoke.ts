@@ -116,6 +116,12 @@ function main() {
   assert.throws(() => asSkin({ ...skinBase, id: -1 }), /E_BAD_ARGS/);
   ok("file.link manquant, objet absent et id invalide sont refuses");
 
+  // Live attribue ses propres identifiants : un plafond fixe (ancien
+  // 100_000_000) a fini par rejeter du contenu reel une fois franchi.
+  const grownId = asSkin({ ...skinBase, id: 195_976_045, lang_group: 195_976_045 });
+  assert.equal(grownId.id, 195_976_045);
+  ok("un identifiant Live au-dela de 100 millions passe toujours");
+
   console.log("\n[5] Reference de desinstallation");
   assert.deepEqual(asRecordRef({ contentType: "camouflage", lang_group: 9, path: "C:/Windows" }), {
     contentType: "camouflage",

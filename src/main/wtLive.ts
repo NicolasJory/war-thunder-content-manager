@@ -887,6 +887,14 @@ export const sightInstaller: Installer = {
 
     if (written === 0) fail(ERR.emptyArchive);
 
+    // Un chemin déjà réclamé par un autre paquet sight installé vient d'être
+    // écrasé sur disque : l'utilisateur ne peut pas le voir autrement, ça se
+    // signale plutôt que ça se cache.
+    const others = config.installed.filter((r) => r.contentType === "sight");
+    const overwritten = others.filter((r) =>
+      ((r.meta?.files as string[] | undefined) ?? []).some((f) => touched.includes(f))
+    );
+
     const name = safeFolderName(opts?.folderName?.trim() || suggestedName(skin));
     return {
       contentType: "sight",
@@ -900,12 +908,27 @@ export const sightInstaller: Installer = {
       snapshot: skin,
       fingerprint: fingerprint(skin),
       refreshedAt: Date.now(),
-      meta: { files: touched, via: plan.via, rootOnly: plan.rootOnly ?? false },
+      meta: {
+        files: touched,
+        via: plan.via,
+        rootOnly: plan.rootOnly ?? false,
+        overwrites: overwritten.map((r) => r.name),
+      },
     };
   },
 
-  async uninstall(record) {
-    await removeFiles(record.path, (record.meta?.files as string[] | undefined) ?? []);
+  async uninstall(record, config) {
+    // Un chemin encore réclamé par un autre paquet sight installé appartient
+    // désormais à ce paquet-là : le retirer casserait son travail en silence.
+    const claimed = new Set(
+      config.installed
+        .filter((r) => r.contentType === "sight" && r !== record)
+        .flatMap((r) => (r.meta?.files as string[] | undefined) ?? [])
+    );
+    const mine = ((record.meta?.files as string[] | undefined) ?? []).filter(
+      (f) => !claimed.has(f)
+    );
+    await removeFiles(record.path, mine);
   },
 };
 

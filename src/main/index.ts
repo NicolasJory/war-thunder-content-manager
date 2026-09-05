@@ -193,9 +193,11 @@ async function cachedFilters(content: ContentType): Promise<unknown> {
     filtersCache.set(content, { at: Date.now(), value });
     if (content === "camouflage") feedVehicleIds(value);
     return value;
-  } catch (e) {
-    if (content !== "camouflage") throw e;
-    // On ne met PAS le repli en cache : le prochain appel retentera Live.
+  } catch {
+    // Le repli est une taxonomie de véhicules générique, pas propre aux
+    // camouflages : elle sert aussi bien à filtrer les sights. Le réserver au
+    // seul type "camouflage" laissait les autres types planter sans filet.
+    // On ne le met PAS en cache : le prochain appel retentera Live.
     feedVehicleIds(filtersFallback);
     return filtersFallback;
   }

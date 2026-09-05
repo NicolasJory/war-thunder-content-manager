@@ -17,6 +17,7 @@
     "dist": "npm run build && electron-builder --publish never",
     "release": "npm run build && electron-builder --publish always",
     "smoke:sight": "tsx test/sight.smoke.ts",
+    "smoke:sight-overwrite": "tsx test/sight-overwrite.smoke.ts",
     "smoke:network": "tsx test/network.smoke.ts"
   },
   "dependencies": {

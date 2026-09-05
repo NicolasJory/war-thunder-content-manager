@@ -80,7 +80,7 @@ export interface CleanUserPage {
 export function asUserPage(v: unknown): CleanUserPage {
   if (!v || typeof v !== "object") fail(ERR.badArgs, "paramètres d'auteur absents");
   const src = v as Record<string, unknown>;
-  const out: CleanUserPage = { user: asIndex(src.user, 100_000_000) };
+  const out: CleanUserPage = { user: asIndex(src.user, Number.MAX_SAFE_INTEGER) };
   if (src.content !== undefined) out.content = asString(src.content, 32);
   if (src.sort !== undefined) out.sort = asString(src.sort, 32);
   if (src.page !== undefined) out.page = asIndex(src.page, 10_000);
@@ -121,9 +121,12 @@ export function asSkin(v: unknown): CleanSkin {
 
   if (!s.file || typeof s.file.link !== "string") fail(ERR.badArgs, "file.link manquant");
 
+  // Ces identifiants sont attribués par Live, pas par l'app : un plafond fixe
+  // (ex. 100_000_000) a fini par rejeter du contenu réel une fois franchi. On
+  // garde le garde-fou (entier positif) sans deviner une borne qui périmera.
   return {
-    id: asIndex(s.id, 100_000_000),
-    lang_group: asIndex(s.lang_group, 100_000_000),
+    id: asIndex(s.id, Number.MAX_SAFE_INTEGER),
+    lang_group: asIndex(s.lang_group, Number.MAX_SAFE_INTEGER),
     likes: num(s.likes),
     views: num(s.views),
     downloads: num(s.downloads),
@@ -133,7 +136,7 @@ export function asSkin(v: unknown): CleanSkin {
     // La description est du HTML d'auteur : bornée, car elle est persistée.
     description: str(s.description, 8_000),
     author: {
-      id: asIndex(s.author?.id ?? 0, 100_000_000),
+      id: asIndex(s.author?.id ?? 0, Number.MAX_SAFE_INTEGER),
       nickname: str(s.author?.nickname, 128),
       avatar: str(s.author?.avatar, 512),
     },
@@ -158,7 +161,7 @@ export function asAuthorRef(v: unknown): { id: number; nickname: string; avatar:
   if (!v || typeof v !== "object") fail(ERR.badArgs, "auteur absent");
   const a = v as Record<string, unknown>;
   return {
-    id: asIndex(a.id, 100_000_000),
+    id: asIndex(a.id, Number.MAX_SAFE_INTEGER),
     nickname: str(a.nickname, 128),
     avatar: str(a.avatar, 512),
   };
@@ -170,6 +173,6 @@ export function asRecordRef(v: unknown): { contentType: string; lang_group: numb
   const r = v as Record<string, unknown>;
   return {
     contentType: asString(r.contentType, 32),
-    lang_group: asIndex(r.lang_group, 100_000_000),
+    lang_group: asIndex(r.lang_group, Number.MAX_SAFE_INTEGER),
   };
 }
