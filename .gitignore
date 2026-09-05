@@ -14,7 +14,13 @@ release/
 # Réglages d'éditeur personnels
 .vscode/
 .idea/
+.claude-flow/
 
 # Document de passation interne
 BRIEF_*.md
 release/
+
+# Secrets locaux
+.env
+.env.local
+.env.*.local

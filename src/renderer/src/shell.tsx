@@ -184,6 +184,12 @@ export function ShellProvider({
         const rec = await api.content.install(content, skin, folderName);
         onInstalledChange([...installed.filter((r) => r.lang_group !== rec.lang_group), rec]);
         notify(t("installedToast", { name: rec.name }));
+        // Un dossier de véhicule sight est partagé entre paquets : celui-ci
+        // vient d'en écraser un autre sur disque, ça se dit.
+        const overwrites = rec.meta?.overwrites as string[] | undefined;
+        if (overwrites && overwrites.length > 0) {
+          notify(t("sightOverwriteToast", { names: overwrites.join(", ") }));
+        }
       } catch (e) {
         // Une annulation n'est pas un échec : dire « échec de l'installation »
         // à quelqu'un qui vient de cliquer sur Annuler serait absurde.

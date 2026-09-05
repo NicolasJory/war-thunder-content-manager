@@ -396,14 +396,6 @@ code {
   color: var(--accent-soft);
 }
 
-.nav-head {
-  padding: 24px 22px 8px;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--dim-35);
-}
-
 .rail-foot {
   margin-top: auto;
   padding: 16px 20px 0;
@@ -1693,6 +1685,9 @@ code {
   margin-top: 8px;
 }
 
+.installed-group + .installed-group {
+  margin-top: 32px;
+}
 .foreign {
   margin-top: 36px;
   padding-top: 20px;
@@ -1745,6 +1740,22 @@ code {
 }
 
 /* ------------------------- Favoris ------------------------- */
+
+/* Le fil passe avant la liste d'auteurs : c'est ce qu'on vient voir. La liste
+   reprend dessous, séparée comme l'est la section des dossiers étrangers. */
+.fav-feed {
+  margin-bottom: 32px;
+}
+.fav-feed .more-head {
+  align-items: center;
+  margin-bottom: 12px;
+}
+.fav-feed .more-head .muted {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
 
 .fav-grid {
   list-style: none;

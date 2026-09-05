@@ -39,6 +39,18 @@ type InstalledSort = (typeof SORTS)[number]["value"];
 /** En dessous, tout tient a l'ecran : la barre encombrerait plus qu'elle n'aide. */
 const TOOLBAR_FROM = 6;
 
+/** Chaque type se range sous son propre titre, dans l'ordre de la nav. */
+const GROUPS = [
+  { type: "camouflage", titleKey: "contentCamouflages" },
+  { type: "sight", titleKey: "navSights" },
+] as const;
+
+/** Un fichier sight est `<vehicule>/<fichier>.blk` : le compte se lit dans le chemin. */
+function vehicleCount(record: InstalledRecord): number {
+  const files = (record.meta?.files as string[] | undefined) ?? [];
+  return new Set(files.map((f) => f.split("/")[0])).size;
+}
+
 export function Installed({
   records,
   onRecords,
@@ -50,7 +62,7 @@ export function Installed({
   onOpen: (skin: Skin) => void;
   onAuthor: (skin: Skin) => void;
 }) {
-  const { t, locale, notify, tError, requestInstall, content } = useShell();
+  const { t, locale, notify, tError, requestInstall } = useShell();
   const [fetched, setFetched] = useState<Record<number, Skin>>({});
   const [busy, setBusy] = useState(false);
   const [foreign, setForeign] = useState<ForeignFolder[]>([]);
@@ -67,10 +79,11 @@ export function Installed({
     return () => {
       alive = false;
     };
-  }, [records.length, content]);
+  }, [records.length]);
 
-  // Seuls les contenus du type affiché : la barre latérale sépare les vues.
-  const shown = records.filter((r) => r.contentType === content);
+  // Tous les types de contenu ensemble : la distinction se voit sur chaque
+  // carte, pas via un filtre qui viderait la vue selon l'onglet Parcourir actif.
+  const shown = records;
 
   const missing = shown.filter((r) => !r.snapshot && !fetched[r.lang_group]);
 
@@ -232,31 +245,48 @@ export function Installed({
           <p className="muted">{t("filterNoMatch", { term: filter.trim() })}</p>
         </div>
       ) : (
-        <div className="grid">
-          {visible.map((record) => {
-            const skin = record.snapshot ?? fetched[record.lang_group];
-            return skin ? (
-              <div key={record.lang_group} className="installed-card">
-                <SkinCard
-                  skin={skin}
-                  onOpen={() => onOpen(skin)}
-                  onTag={() => undefined}
-                  onAuthor={onAuthor}
-                />
-                <p className="installed-note muted">
-                  {t("folderName")} : <code>{record.name}</code>
-                </p>
-                {hasUpdate(record) && (
-                  <button className="btn primary update" onClick={() => requestInstall(skin)}>
-                    {t("updateNow")}
-                  </button>
-                )}
+        GROUPS.map(({ type, titleKey }) => {
+          const items = visible.filter((r) => r.contentType === type);
+          if (items.length === 0) return null;
+          return (
+            <section key={type} className="installed-group">
+              <div className="more-head">
+                <h3>{t(titleKey)}</h3>
+                <span className="muted">{items.length}</span>
               </div>
-            ) : (
-              <FallbackCard key={record.lang_group} record={record} />
-            );
-          })}
-        </div>
+              <div className="grid">
+                {items.map((record) => {
+                  const skin = record.snapshot ?? fetched[record.lang_group];
+                  return skin ? (
+                    <div key={record.lang_group} className="installed-card">
+                      <SkinCard
+                        skin={skin}
+                        onOpen={() => onOpen(skin)}
+                        onTag={() => undefined}
+                        onAuthor={onAuthor}
+                      />
+                      <p className="installed-note muted">
+                        {t("folderName")} : <code>{record.name}</code>
+                      </p>
+                      {record.contentType === "sight" && (
+                        <p className="installed-note muted">
+                          {t("sightVehicleCount", { n: vehicleCount(record) })}
+                        </p>
+                      )}
+                      {hasUpdate(record) && (
+                        <button className="btn primary update" onClick={() => requestInstall(skin)}>
+                          {t("updateNow")}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <FallbackCard key={record.lang_group} record={record} />
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })
       )}
 
       {foreign.length > 0 && (

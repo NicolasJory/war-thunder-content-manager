@@ -31,11 +31,9 @@ const en = {
   brandTop: "War Thunder",
   brandBottom: "Content Manager",
   monogram: "WT",
-  contentCamouflages: "Camouflages",
-  contentType: "Content",
+  contentCamouflages: "Camouflage",
 
   // Barre latérale
-  tabBrowse: "Browse",
   tabInstalled: "Installed",
   soon: "Soon",
   navSights: "Sights",
@@ -128,10 +126,10 @@ const en = {
     "An author's feed also holds screenshots and videos; only installable camouflages are listed.",
 
   // Installés
-  installedTitle: "Installed camouflages",
-  installedEmpty: "No camouflage installed by the application.",
+  installedTitle: "Installed content",
+  installedEmpty: "Nothing installed by the application.",
   installedEmptyHelp:
-    "Only folders placed by the application. Those already in UserSkins are never touched.",
+    "Only folders and files placed by the application. What was already there is never touched.",
   installedOn: "Installed on",
   refresh: "Refresh",
   favorites: "Favourites",
@@ -158,6 +156,12 @@ const en = {
   lastChecked: "checked {date}",
   filterInstalled: "Filter by name…",
   filterMatches: "{n} shown",
+  favFeedTitle: "Latest from your favourites",
+  favFeedLoad: "Load",
+  favFeedLoading: "Checking {n} of {total}…",
+  favFeedHelp: "One request per favourite author, so it runs when you ask.",
+  favFeedEmpty: "Nothing published yet by these authors.",
+  favAuthorsTitle: "Authors",
   filterNoMatch: "Nothing installed matches “{term}”.",
   sortInstalledAt: "Recently installed",
   sortAZ: "Name (A–Z)",
@@ -193,6 +197,8 @@ const en = {
   retry: "Retry",
   installedToast: "{name} installed.",
   uninstalledToast: "{name} removed.",
+  sightOverwriteToast: "Also replaced reticles used by {names}.",
+  sightVehicleCount: "{n} vehicles",
   installFailed: "Install failed: {reason}",
   uninstallFailed: "Removal failed: {reason}",
 
@@ -236,9 +242,7 @@ const fr: Record<Key, string> = {
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "Camouflages",
-  contentType: "Contenu",
 
-  tabBrowse: "Parcourir",
   tabInstalled: "Installés",
   soon: "Bientôt",
   navSights: "Viseurs",
@@ -328,10 +332,10 @@ const fr: Record<Key, string> = {
   authorNote:
     "Le feed d'un auteur contient aussi des captures et des vidéos ; seuls les camouflages installables sont listés.",
 
-  installedTitle: "Camouflages installés",
-  installedEmpty: "Aucun camouflage installé par l'application.",
+  installedTitle: "Contenu installé",
+  installedEmpty: "Rien n'a été installé par l'application.",
   installedEmptyHelp:
-    "Seuls les dossiers posés par l'application. Ceux déjà présents dans UserSkins ne sont jamais touchés.",
+    "Seuls les dossiers et fichiers posés par l'application. Ce qui était déjà là n'est jamais touché.",
   installedOn: "Installé le",
   refresh: "Rafraîchir",
   favorites: "Favoris",
@@ -358,6 +362,12 @@ const fr: Record<Key, string> = {
   lastChecked: "vérifié {date}",
   filterInstalled: "Filtrer par nom…",
   filterMatches: "{n} affichés",
+  favFeedTitle: "Dernières publications de tes favoris",
+  favFeedLoad: "Charger",
+  favFeedLoading: "Vérification {n} sur {total}…",
+  favFeedHelp: "Une requête par auteur favori : ça se lance à la demande.",
+  favFeedEmpty: "Ces auteurs n'ont encore rien publié.",
+  favAuthorsTitle: "Auteurs",
   filterNoMatch: "Aucun contenu installé ne correspond à « {term} ».",
   sortInstalledAt: "Installés récemment",
   sortAZ: "Nom (A–Z)",
@@ -390,6 +400,8 @@ const fr: Record<Key, string> = {
   retry: "Réessayer",
   installedToast: "{name} installé.",
   uninstalledToast: "{name} désinstallé.",
+  sightOverwriteToast: "A aussi remplacé des viseurs utilisés par {names}.",
+  sightVehicleCount: "{n} véhicules",
   installFailed: "Échec de l'installation : {reason}",
   uninstallFailed: "Échec de la désinstallation : {reason}",
 
@@ -433,10 +445,7 @@ const ru: Record<Key, string> = {
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "Камуфляжи",
-  contentType: "Содержимое",
 
-
-  tabBrowse: "Обзор",
   tabInstalled: "Установленные",
   soon: "Скоро",
   navSights: "Прицелы",
@@ -525,10 +534,10 @@ const ru: Record<Key, string> = {
   authorNote:
     "В ленте автора есть также скриншоты и видео; здесь показаны только камуфляжи, которые можно установить.",
 
-  installedTitle: "Установленные камуфляжи",
+  installedTitle: "Установленный контент",
   installedEmpty: "Приложение пока ничего не установило.",
   installedEmptyHelp:
-    "Только папки, созданные приложением. Те, что уже были в UserSkins, оно не трогает.",
+    "Только папки и файлы, добавленные приложением. То, что уже было, оно не трогает.",
   installedOn: "Установлено",
   refresh: "Обновить",
   favorites: "Избранное",
@@ -555,6 +564,12 @@ const ru: Record<Key, string> = {
   lastChecked: "проверено {date}",
   filterInstalled: "Фильтр по названию…",
   filterMatches: "показано: {n}",
+  favFeedTitle: "Новое у избранных авторов",
+  favFeedLoad: "Загрузить",
+  favFeedLoading: "Проверка {n} из {total}…",
+  favFeedHelp: "Один запрос на каждого автора, поэтому запускается вручную.",
+  favFeedEmpty: "Эти авторы пока ничего не опубликовали.",
+  favAuthorsTitle: "Авторы",
   filterNoMatch: "Ничего из установленного не соответствует «{term}».",
   sortInstalledAt: "Недавно установленные",
   sortAZ: "По названию (A–Z)",
@@ -587,6 +602,8 @@ const ru: Record<Key, string> = {
   retry: "Повторить",
   installedToast: "«{name}» установлен.",
   uninstalledToast: "«{name}» удалён.",
+  sightOverwriteToast: "Также заменены прицелы, используемые {names}.",
+  sightVehicleCount: "{n} техники",
   installFailed: "Не удалось установить: {reason}",
   uninstallFailed: "Не удалось удалить: {reason}",
 
@@ -629,10 +646,7 @@ const zh: Record<Key, string> = {
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "涂装",
-  contentType: "内容",
 
-
-  tabBrowse: "浏览",
   tabInstalled: "已安装",
   soon: "即将推出",
   navSights: "瞄准镜",
@@ -716,9 +730,9 @@ const zh: Record<Key, string> = {
   authorEmpty: "该作者在本页没有涂装。",
   authorNote: "作者的动态中还包含截图和视频；此处只列出可安装的涂装。",
 
-  installedTitle: "已安装的涂装",
-  installedEmpty: "本应用尚未安装任何涂装。",
-  installedEmptyHelp: "仅显示由本应用放入的文件夹。UserSkins 中原有的文件夹不会被改动。",
+  installedTitle: "已安装内容",
+  installedEmpty: "本应用尚未安装任何内容。",
+  installedEmptyHelp: "仅显示由本应用放入的文件夹和文件。原有内容不会被改动。",
   installedOn: "安装于",
   refresh: "刷新",
   favorites: "收藏",
@@ -745,6 +759,12 @@ const zh: Record<Key, string> = {
   lastChecked: "检查于 {date}",
   filterInstalled: "按名称筛选…",
   filterMatches: "显示 {n} 项",
+  favFeedTitle: "收藏作者的最新作品",
+  favFeedLoad: "加载",
+  favFeedLoading: "正在检查第 {n} / {total} 位…",
+  favFeedHelp: "每位收藏作者需要一次请求，因此由你手动触发。",
+  favFeedEmpty: "这些作者还没有发布内容。",
+  favAuthorsTitle: "作者",
   filterNoMatch: "已安装的内容中没有与“{term}”匹配的项。",
   sortInstalledAt: "最近安装",
   sortAZ: "名称（A–Z）",
@@ -775,6 +795,8 @@ const zh: Record<Key, string> = {
   retry: "重试",
   installedToast: "已安装《{name}》。",
   uninstalledToast: "已移除《{name}》。",
+  sightOverwriteToast: "同时替换了 {names} 使用的瞄准镜。",
+  sightVehicleCount: "{n} 辆载具",
   installFailed: "安装失败：{reason}",
   uninstallFailed: "移除失败：{reason}",
 

@@ -206,11 +206,22 @@ function Shell({
 
         <nav className="nav">
           <button
-            className={tab === "browse" && !author ? "nav-item active" : "nav-item"}
-            onClick={() => go("browse")}
+            className={
+              tab === "browse" && content === "camouflage" && !author ? "nav-item active" : "nav-item"
+            }
+            onClick={() => switchContent("camouflage")}
           >
             <IconSearch size={16} />
-            {t("tabBrowse")}
+            {t("contentCamouflages")}
+          </button>
+          <button
+            className={
+              tab === "browse" && content === "sight" && !author ? "nav-item active" : "nav-item"
+            }
+            onClick={() => switchContent("sight")}
+          >
+            <IconSight size={16} />
+            {t("navSights")}
           </button>
           <button
             className={tab === "installed" ? "nav-item active" : "nav-item"}
@@ -218,9 +229,9 @@ function Shell({
           >
             <IconDownload size={16} />
             {t("tabInstalled")}
-            <span className="nav-count">
-              {config.installed.filter((r) => r.contentType === content).length}
-            </span>
+            {/* Le total, pas filtré par le type actif : l'onglet Installés
+                montre désormais tout ensemble. */}
+            <span className="nav-count">{config.installed.length}</span>
           </button>
           <button
             className={tab === "favorites" && !author ? "nav-item active" : "nav-item"}
@@ -229,24 +240,6 @@ function Shell({
             <IconInfo size={16} />
             {t("favorites")}
             <span className="nav-count">{config.favorites.length}</span>
-          </button>
-        </nav>
-
-        <div className="nav-head">{t("contentType")}</div>
-        <nav className="nav">
-          <button
-            className={content === "camouflage" ? "nav-item active" : "nav-item"}
-            onClick={() => switchContent("camouflage")}
-          >
-            <IconSearch size={16} />
-            {t("contentCamouflages")}
-          </button>
-          <button
-            className={content === "sight" ? "nav-item active" : "nav-item"}
-            onClick={() => switchContent("sight")}
-          >
-            <IconSight size={16} />
-            {t("navSights")}
           </button>
           {/* Les mods son demandent en plus de patcher config.blk : l'entrée
               reste visible pour dire qu'ils arrivent, sans faire croire. */}
@@ -306,6 +299,9 @@ function Shell({
           <Favorites
             favorites={config.favorites}
             onOpen={(f) => goTo(() => setAuthor({ id: f.id, nickname: f.nickname, avatar: f.avatar }))}
+            onSkin={setOpenSkin}
+            onTag={searchTag}
+            onAuthor={showAuthor}
           />
         ) : (
           <Installed
