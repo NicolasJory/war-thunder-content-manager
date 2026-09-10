@@ -30,9 +30,14 @@ const api = {
     filters: (content: string) => ipcRenderer.invoke("filters:get", content),
     post: (langGroup: number) => ipcRenderer.invoke("content:post", langGroup),
     userPage: (params: unknown) => ipcRenderer.invoke("content:userPage", params),
-    install: (content: string, skin: unknown, folderName?: string) =>
-      ipcRenderer.invoke("content:install", content, skin, folderName),
+    install: (content: string, skin: unknown, folderName?: string, groups?: string[]) =>
+      ipcRenderer.invoke("content:install", content, skin, folderName, groups),
     uninstall: (record: unknown) => ipcRenderer.invoke("content:uninstall", record),
+    /** Contenu d'une archive lu sans la télécharger. `null` = rien à demander. */
+    inspect: (skin: unknown) => ipcRenderer.invoke("content:inspect", skin),
+    /** Pose ou retire un mod son sans toucher à son archive conservée. */
+    setActive: (record: unknown, active: boolean) =>
+      ipcRenderer.invoke("content:setActive", record, active),
     cancelInstall: (id: number) => ipcRenderer.invoke("content:cancelInstall", id),
     refreshInstalled: () => ipcRenderer.invoke("content:refreshInstalled"),
     foreign: () => ipcRenderer.invoke("content:foreign"),

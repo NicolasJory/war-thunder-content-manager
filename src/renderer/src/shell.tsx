@@ -21,8 +21,11 @@ import {
 import {
   api,
   formatSize,
+  isActive,
   setPages,
+  soundMeta,
   suggestName,
+  type ArchiveChoice,
   type ContentType,
   type InstalledRecord,
   type Progress,
@@ -35,6 +38,13 @@ import { useFocusTrap } from "./useFocusTrap";
 import { IconClose } from "./icons";
 
 type Toast = { id: number; msg: string; kind: "ok" | "err" };
+
+/**
+ * Types que le main sait poser. Il faut le savoir ici parce que le type est lu
+ * sur le contenu lui-meme, pas sur l'onglet ouvert : `skin.type` peut valoir
+ * `image` ou `video`, qui ne s'installent pas.
+ */
+const INSTALLABLE = ["camouflage", "sight", "sound"] as const;
 
 interface Shell {
   /** Type de contenu affiché. Toutes les vues et l'installation le suivent. */
@@ -60,6 +70,11 @@ interface Shell {
   /** Ouvre la boîte de renommage puis installe. */
   requestInstall: (skin: Skin) => void;
   uninstall: (record: InstalledRecord, label?: string) => Promise<void>;
+  /**
+   * Pose ou retire un mod son sans toucher a son archive. Seul le son a cet
+   * etat intermediaire : un camouflage est installe ou ne l'est pas.
+   */
+  setActive: (record: InstalledRecord, active: boolean) => Promise<void>;
   busyId: number | null;
   busyGroup: number | null;
   progress: Progress | null;
@@ -87,6 +102,12 @@ export function ShellProvider({
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [pendingSkin, setPendingSkin] = useState<Skin | null>(null);
+  // Desinstaller un mod son actif efface ses fichiers ET son archive : on le
+  // demande avant, ce qui n'a pas lieu d'etre pour un camouflage.
+  const [pendingRemove, setPendingRemove] = useState<{
+    record: InstalledRecord;
+    label?: string;
+  } | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   // Miroir synchrone de busyId : l'état React arrive trop tard pour barrer un
   // second clic dans la même salve d'événements.
@@ -173,8 +194,23 @@ export function ShellProvider({
     [installed]
   );
 
+  /**
+   * Le type vient du contenu lui-meme, pas de l'onglet ouvert.
+   *
+   * L'onglet Installes montre tous les types ensemble : mettre a jour un viseur
+   * depuis cet onglet alors que « Camouflages » etait le dernier type visite
+   * l'aurait installe comme un camouflage, donc au mauvais endroit.
+   */
+  const typeOf = useCallback(
+    (skin: Skin): ContentType =>
+      (INSTALLABLE as readonly string[]).includes(skin.type)
+        ? (skin.type as ContentType)
+        : content,
+    [content]
+  );
+
   const doInstall = useCallback(
-    async (skin: Skin, folderName: string) => {
+    async (skin: Skin, folderName: string, groups?: string[]) => {
       // Une seule à la fois : `busyId` ne retient qu'une valeur, donc une
       // seconde installation lancée pendant la première écrasait le suivi et
       // figeait sa barre de progression alors qu'elle continuait.
@@ -183,14 +219,15 @@ export function ShellProvider({
       setBusyId(skin.id);
       setProgress(null);
       try {
-        const rec = await api.content.install(content, skin, folderName);
+        const rec = await api.content.install(typeOf(skin), skin, folderName, groups);
         onInstalledChange([...installed.filter((r) => r.lang_group !== rec.lang_group), rec]);
         notify(t("installedToast", { name: rec.name }));
-        // Un dossier de véhicule sight est partagé entre paquets : celui-ci
-        // vient d'en écraser un autre sur disque, ça se dit.
+        // Un dossier de véhicule sight, une banque son : les deux sont partagés
+        // entre paquets, et celui-ci vient d'en écraser un autre sur disque.
         const overwrites = rec.meta?.overwrites as string[] | undefined;
         if (overwrites && overwrites.length > 0) {
-          notify(t("sightOverwriteToast", { names: overwrites.join(", ") }));
+          const key = rec.contentType === "sound" ? "soundOverwriteToast" : "sightOverwriteToast";
+          notify(t(key, { names: overwrites.join(", ") }));
         }
       } catch (e) {
         // Une annulation n'est pas un échec : dire « échec de l'installation »
@@ -204,10 +241,10 @@ export function ShellProvider({
         setProgress(null);
       }
     },
-    [installed, onInstalledChange, notify, t, tError, content]
+    [installed, onInstalledChange, notify, t, tError, typeOf]
   );
 
-  const uninstall = useCallback(
+  const doUninstall = useCallback(
     async (record: InstalledRecord, label?: string) => {
       setBusyGroup(record.lang_group);
       try {
@@ -216,6 +253,45 @@ export function ShellProvider({
         notify(t("uninstalledToast", { name: label ?? record.name }));
       } catch (e) {
         notify(t("uninstallFailed", { reason: tError((e as Error).message) }), "err");
+      } finally {
+        setBusyGroup(null);
+      }
+    },
+    [installed, onInstalledChange, notify, t, tError]
+  );
+
+  /**
+   * Desinstaller un mod son actuellement dans le jeu emporte ses banques ET son
+   * archive : rien n'est conserve. Ce n'est pas la meme chose que le desactiver,
+   * et la difference se joue sur 850 Mo a retelecharger.
+   */
+  const uninstall = useCallback(
+    async (record: InstalledRecord, label?: string) => {
+      if (isActive(record)) {
+        setPendingRemove({ record, label });
+        return;
+      }
+      await doUninstall(record, label);
+    },
+    [doUninstall]
+  );
+
+  const setActive = useCallback(
+    async (record: InstalledRecord, active: boolean) => {
+      setBusyGroup(record.lang_group);
+      try {
+        const next = await api.content.setActive(record, active);
+        onInstalledChange(
+          installed.map((r) => (r.lang_group === next.lang_group ? next : r))
+        );
+        const name = next.name;
+        notify(t(active ? "activatedToast" : "deactivatedToast", { name }));
+        const overwrites = soundMeta(next)?.overwrites ?? [];
+        if (active && overwrites.length > 0) {
+          notify(t("soundOverwriteToast", { names: overwrites.join(", ") }));
+        }
+      } catch (e) {
+        notify(t("activateFailed", { reason: tError((e as Error).message) }), "err");
       } finally {
         setBusyGroup(null);
       }
@@ -249,6 +325,7 @@ export function ShellProvider({
     recordFor,
     requestInstall: (skin: Skin) => busyRef.current === null && setPendingSkin(skin),
     uninstall,
+    setActive,
     busyId,
     busyGroup,
     progress,
@@ -262,10 +339,26 @@ export function ShellProvider({
         <InstallDialog
           skin={pendingSkin}
           onCancel={() => setPendingSkin(null)}
-          onConfirm={(name) => {
+          onConfirm={(name, groups) => {
             const skin = pendingSkin;
             setPendingSkin(null);
-            void doInstall(skin, name);
+            void doInstall(skin, name, groups);
+          }}
+        />
+      )}
+      {pendingRemove && (
+        <RemoveActiveConfirm
+          record={pendingRemove.record}
+          onCancel={() => setPendingRemove(null)}
+          onConfirm={() => {
+            const { record, label } = pendingRemove;
+            setPendingRemove(null);
+            void doUninstall(record, label);
+          }}
+          onDeactivate={() => {
+            const { record } = pendingRemove;
+            setPendingRemove(null);
+            void setActive(record, false);
           }}
         />
       )}
@@ -365,6 +458,9 @@ function ExternalConfirm({ url, onClose }: { url: string; onClose: () => void })
 
 // ------------------------- Boîte d'installation ------------------------- //
 
+const lastSegment = (dir: string) => dir.slice(dir.lastIndexOf("/") + 1);
+const parentOf = (dir: string) => (dir.includes("/") ? dir.slice(0, dir.lastIndexOf("/")) : "");
+
 function InstallDialog({
   skin,
   onCancel,
@@ -372,10 +468,15 @@ function InstallDialog({
 }: {
   skin: Skin;
   onCancel: () => void;
-  onConfirm: (name: string) => void;
+  onConfirm: (name: string, groups?: string[]) => void;
 }) {
   const { t, installed } = useShell();
   const [name, setName] = useState(() => suggestName(skin));
+  const [choice, setChoice] = useState<ArchiveChoice | null>(null);
+  // Seul le son a des archives à plusieurs dossiers : inutile de faire deux
+  // requêtes Range pour un camouflage qui n'a rien à demander.
+  const [probing, setProbing] = useState(skin.type === "sound");
+  const [selected, setSelected] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const box = useRef<HTMLDivElement>(null);
   useFocusTrap(box);
@@ -387,17 +488,78 @@ function InstallDialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
 
+  /**
+   * L'index du zip se lit en deux requêtes Range, donc AVANT le téléchargement.
+   * Poser la question après dix minutes d'attente serait une insulte.
+   *
+   * Un échec ici n'est pas bloquant : le main refait le même classement une
+   * fois l'archive sur le disque, et refuse alors une archive ambiguë.
+   */
+  useEffect(() => {
+    if (skin.type !== "sound") return;
+    let alive = true;
+    api.content
+      .inspect(skin)
+      .then((found) => {
+        if (!alive) return;
+        setChoice(found);
+        setSelected(found?.selected ?? []);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (alive) setProbing(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [skin]);
+
+  /**
+   * Cocher un dossier décoche ceux qui posent les mêmes fichiers.
+   *
+   * C'est ce qui fait qu'une famille d'alternatives se comporte comme des
+   * boutons radio et un ensemble additif comme des cases, sans que le code ait
+   * à distinguer les deux : la liste des conflits vient du main.
+   */
+  const toggle = useCallback(
+    (dir: string) => {
+      setSelected((prev) => {
+        if (prev.includes(dir)) return prev.filter((d) => d !== dir);
+        const clash = new Set(choice?.groups.find((g) => g.dir === dir)?.clashesWith ?? []);
+        return [...prev.filter((d) => !clash.has(d)), dir];
+      });
+    },
+    [choice]
+  );
+
+  // Les alternatives d'une même famille partagent un dossier parent : c'est ce
+  // qui permet de les présenter ensemble plutôt qu'en liste plate de 22 lignes.
+  const families = useMemo(() => {
+    const map = new Map<string, ArchiveChoice["groups"]>();
+    for (const g of choice?.groups ?? []) {
+      const parent = parentOf(g.dir);
+      const list = map.get(parent);
+      if (list) list.push(g);
+      else map.set(parent, [g]);
+    }
+    return [...map.entries()];
+  }, [choice]);
+
   const trimmed = name.trim();
   // Le main réassainit de toute façon ; ici on prévient juste avant de cliquer.
   const invalid = !trimmed || /[<>:"|?*\\/]/.test(trimmed);
   const taken = installed.some(
     (r) => r.name.toLowerCase() === trimmed.toLowerCase() && r.lang_group !== skin.lang_group
   );
+  const nothingPicked = choice !== null && selected.length === 0;
+  const blocked = invalid || probing || nothingPicked;
+
+  const confirm = () => !blocked && onConfirm(trimmed, choice ? selected : undefined);
 
   return (
     <div className="modal-backdrop" onClick={onCancel}>
       <div
-        className="modal small"
+        className={choice ? "modal" : "modal small"}
         ref={box}
         tabIndex={-1}
         role="dialog"
@@ -419,19 +581,115 @@ function InstallDialog({
             spellCheck={false}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !invalid) onConfirm(trimmed);
+              if (e.key === "Enter") confirm();
             }}
           />
           <p className="hint">{t("installNameHelp")}</p>
           {invalid && <p className="error">{t("installNameInvalid")}</p>}
           {!invalid && taken && <p className="warn">{t("installNameTaken")}</p>}
 
+          {probing && (
+            <p className="hint">
+              <span className="spinner" /> {t("loading")}
+            </p>
+          )}
+
+          {choice && (
+            <section className="choose">
+              <h3>{t("chooseTitle")}</h3>
+              {families.map(([parent, groups]) => {
+                const exclusive = groups.some((g) => g.clashesWith.length > 0);
+                return (
+                  <div key={parent || "(root)"} className="choose-family">
+                    {parent && <p className="choose-parent">{lastSegment(parent)}</p>}
+                    <p className="hint">
+                      {exclusive ? t("chooseExclusiveHelp") : t("chooseAdditiveHelp")}
+                    </p>
+                    {groups.map((g) => (
+                      <label key={g.dir} className="choose-row">
+                        <input
+                          type="checkbox"
+                          checked={selected.includes(g.dir)}
+                          onChange={() => toggle(g.dir)}
+                        />
+                        <span className="choose-name">
+                          {lastSegment(g.dir) || t("chooseRootGroup")}
+                        </span>
+                        <span className="muted">{t("soundBankCount", { n: g.count })}</span>
+                      </label>
+                    ))}
+                  </div>
+                );
+              })}
+              {nothingPicked && <p className="error">{t("chooseNone")}</p>}
+            </section>
+          )}
+
           <div className="modal-actions">
             <button className="btn ghost" onClick={onCancel}>
               {t("cancel")}
             </button>
-            <button className="btn primary" disabled={invalid} onClick={() => onConfirm(trimmed)}>
+            <button className="btn primary" disabled={blocked} onClick={confirm}>
               {t("confirm")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Désinstaller un mod son actif emporte ses banques ET son archive.
+ *
+ * La désactivation existe précisément pour éviter ça, et l'écart entre les deux
+ * se compte en centaines de mégaoctets à retélécharger. On propose donc les
+ * deux dans la même boîte plutôt que de laisser choisir à l'aveugle.
+ */
+function RemoveActiveConfirm({
+  record,
+  onCancel,
+  onConfirm,
+  onDeactivate,
+}: {
+  record: InstalledRecord;
+  onCancel: () => void;
+  onConfirm: () => void;
+  onDeactivate: () => void;
+}) {
+  const { t } = useShell();
+  const box = useRef<HTMLDivElement>(null);
+  useFocusTrap(box);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
+  return (
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div
+        className="modal small"
+        ref={box}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("removeActiveTitle", { name: record.name })}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-body">
+          <h2>{t("removeActiveTitle", { name: record.name })}</h2>
+          <p className="hint">{t("removeActiveBody")}</p>
+          <div className="modal-actions">
+            <button className="btn ghost" onClick={onCancel}>
+              {t("cancel")}
+            </button>
+            <button className="btn" onClick={onDeactivate}>
+              {t("deactivate")}
+            </button>
+            <button className="btn danger" onClick={onConfirm}>
+              {t("uninstall")}
             </button>
           </div>
         </div>

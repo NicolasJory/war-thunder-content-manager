@@ -62,8 +62,15 @@ interface Api {
       sort?: SortKey;
       page?: number;
     }): Promise<Page>;
-    install(content: ContentType, skin: Skin, folderName?: string): Promise<InstalledRecord>;
+    install(
+      content: ContentType,
+      skin: Skin,
+      folderName?: string,
+      groups?: string[]
+    ): Promise<InstalledRecord>;
     uninstall(record: InstalledRecord): Promise<void>;
+    inspect(skin: Skin): Promise<ArchiveChoice | null>;
+    setActive(record: InstalledRecord, active: boolean): Promise<InstalledRecord>;
     cancelInstall(id: number): Promise<boolean>;
     refreshInstalled(): Promise<InstalledRecord[]>;
     foreign(): Promise<ForeignFolder[]>;
@@ -82,6 +89,46 @@ type DeepLinkValue =
   | { kind: "post"; langGroup: number }
   | { kind: "author"; nickname: string }
   | { kind: "tag"; tag: string };
+
+/**
+ * Ce qu'une archive propose comme dossiers, lu avant le téléchargement.
+ *
+ * `needsChoice` distingue les deux formes : des dossiers qui s'additionnent
+ * (cases à cocher, tout coché) et des dossiers qui posent les mêmes fichiers,
+ * donc s'excluent (un seul retenu par famille).
+ */
+export interface ArchiveChoice {
+  needsChoice: boolean;
+  groups: Array<{ dir: string; count: number; clashesWith: string[] }>;
+  /** Sélection de départ : les additifs, plus un de chaque famille exclusive. */
+  selected: string[];
+}
+
+/**
+ * Ce qu'un mod son porte en plus des autres types.
+ *
+ * Il a un état que les autres n'ont pas : téléchargé sans être posé dans le
+ * jeu. Le main en est la seule source — ces champs viennent de config.json et
+ * ne sont jamais fabriqués ici.
+ */
+export interface SoundMeta {
+  /** Banques posées dans `sound/mod`, sans dossier. */
+  files: string[];
+  /** Dossiers de l'archive retenus à l'installation. */
+  groups: string[];
+  active: boolean;
+  activatedAt: number;
+  /** Mods dont celui-ci a recouvert au moins une banque. */
+  overwrites: string[];
+}
+
+export function soundMeta(record: InstalledRecord): SoundMeta | null {
+  if (record.contentType !== "sound" || !record.meta) return null;
+  return record.meta as unknown as SoundMeta;
+}
+
+/** Un mod son posé dans le jeu, par opposition à simplement téléchargé. */
+export const isActive = (record: InstalledRecord): boolean => soundMeta(record)?.active === true;
 
 export interface ForeignFolder {
   name: string;

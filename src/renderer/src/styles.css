@@ -1813,3 +1813,79 @@ code {
   align-self: center;
   font-size: 12px;
 }
+
+/* ------------------------- Choix des dossiers d'une archive ------------------------- */
+
+/* La liste peut compter vingt-deux entrées (IASM et ses RWR) : elle défile
+   dans la boîte plutôt que de pousser les boutons hors de l'écran. */
+.choose {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+}
+.choose h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.choose-family {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.choose-parent {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.choose-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 7px;
+  border-radius: var(--r);
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.choose-row:hover {
+  background: var(--panel);
+}
+.choose-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------- État d'un mod son ------------------------- */
+
+.sound-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+.sound-state .installed-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 2px;
+}
+/* Pastille éteinte : le mod est sur le disque mais pas dans le jeu. */
+.dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--dim-40);
+}
+/* La palette n'a pas de vert : « en service » se dit à l'accent, comme le
+   reste de l'application. */
+.dot.on {
+  background: var(--accent-hi);
+}

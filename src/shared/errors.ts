@@ -33,6 +33,14 @@ export const ERR = {
   noSightsDir: "E_NO_SIGHTS_DIR",
   unknownLayout: "E_UNKNOWN_LAYOUT",
   notInstalled: "E_NOT_INSTALLED",
+  /** Archive son dont plusieurs dossiers posent les mêmes banques, sans choix reçu. */
+  needsChoice: "E_NEEDS_CHOICE",
+  /** Dossier des archives conservées non initialisé — bug de démarrage. */
+  noLibrary: "E_NO_LIBRARY",
+  /** config.blk absent : le jeu n'a jamais été lancé sur cette machine. */
+  noConfigBlk: "E_NO_CONFIG_BLK",
+  /** Type de contenu qui ne distingue pas « téléchargé » de « posé ». */
+  noActivation: "E_NO_ACTIVATION",
 } as const;
 
 /** Motifs de rejet d'un dossier de jeu, affichés dans l'écran de configuration. */

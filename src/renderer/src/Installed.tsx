@@ -18,7 +18,9 @@ import {
   formatDate,
   formatSize,
   hasUpdate,
+  isActive,
   skinLabel,
+  soundMeta,
   type ForeignFolder,
   type InstalledRecord,
   type Skin,
@@ -43,6 +45,7 @@ const TOOLBAR_FROM = 6;
 const GROUPS = [
   { type: "camouflage", titleKey: "contentCamouflages" },
   { type: "sight", titleKey: "navSights" },
+  { type: "sound", titleKey: "navSounds" },
 ] as const;
 
 /** Un fichier sight est `<vehicule>/<fichier>.blk` : le compte se lit dans le chemin. */
@@ -273,6 +276,7 @@ export function Installed({
                           {t("sightVehicleCount", { n: vehicleCount(record) })}
                         </p>
                       )}
+                      {record.contentType === "sound" && <SoundState record={record} />}
                       {hasUpdate(record) && (
                         <button className="btn primary update" onClick={() => requestInstall(skin)}>
                           {t("updateNow")}
@@ -345,5 +349,42 @@ function FallbackCard({ record }: { record: InstalledRecord }) {
         </button>
       </div>
     </article>
+  );
+}
+
+/**
+ * L'état d'un mod son, et le bouton qui le fait basculer.
+ *
+ * Un mod son est le seul contenu à avoir trois états au lieu de deux : pas
+ * téléchargé, téléchargé et posé dans le jeu, téléchargé et sorti du jeu. Le
+ * désactiver garde son archive, ce qui évite de refaire 850 Mo pour y revenir.
+ */
+function SoundState({ record }: { record: InstalledRecord }) {
+  const { t, setActive, busyGroup } = useShell();
+  const meta = soundMeta(record);
+  const busy = busyGroup === record.lang_group;
+  const active = isActive(record);
+
+  return (
+    <div className="sound-state">
+      <p className="installed-note muted">
+        <span className={active ? "dot on" : "dot"} aria-hidden="true" />
+        {active ? t("soundActive") : t("soundInactive")}
+        {meta ? ` · ${t("soundBankCount", { n: meta.files.length })}` : ""}
+      </p>
+      <button
+        className={active ? "btn full" : "btn primary full"}
+        disabled={busy}
+        onClick={() => setActive(record, !active)}
+      >
+        {busy ? (
+          <>
+            <span className="spinner" /> {t(active ? "deactivating" : "activating")}
+          </>
+        ) : (
+          t(active ? "deactivate" : "activate")
+        )}
+      </button>
+    </div>
   );
 }

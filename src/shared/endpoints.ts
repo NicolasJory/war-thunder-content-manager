@@ -81,7 +81,10 @@ export const DEFAULT_ENDPOINTS: Endpoints = {
     tag: "https://live.warthunder.com/?q=%23{tag}",
   },
   limits: {
-    maxDownloadBytes: 512 * 1024 * 1024,
+    // 1 Go : les mods son montent à 853 Mo (ETSMIV), contre 90 Mo pour le plus
+    // gros camouflage. L'archive n'est plus tamponnée en mémoire depuis qu'elle
+    // s'écrit au fil de l'eau, ce plafond ne protège plus que le disque.
+    maxDownloadBytes: 1024 * 1024 * 1024,
     maxExtractedBytes: 2 * 1024 * 1024 * 1024,
     maxEntries: 20_000,
     idleMs: 60_000,

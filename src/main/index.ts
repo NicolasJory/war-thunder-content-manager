@@ -13,8 +13,10 @@ import { ERR, fail } from "../shared/errors.js";
 import { parseDeepLink, setSiteHosts, SCHEME, type DeepLink } from "../shared/deepLink.js";
 import { DEFAULT_ENDPOINTS, type Endpoints } from "../shared/endpoints.js";
 import { isPortable, resolveEndpoints, startUpdater } from "./updater.js";
+import { defaultSelection, planSoundLayout } from "./soundLayout.js";
 import {
   asIndex,
+  asGroups,
   asRecordRef,
   asSearchParams,
   asSkin,
@@ -35,7 +37,10 @@ import {
   fetchUserPage,
   fetchVehicleFont,
   fingerprint,
+  readStockBanks,
+  readZipIndex,
   setEndpoints,
+  setLibraryDir,
   setVehicleIds,
   getInstaller,
   listForeign,
@@ -343,12 +348,15 @@ function registerIpc() {
 
   ipcMain.handle(
     "content:install",
-    async (e, content: unknown, rawSkin: unknown, folderName?: unknown) => {
+    async (e, content: unknown, rawSkin: unknown, folderName?: unknown, groups?: unknown) => {
       const cfg = await requireGameDir();
       // Le contenu est reconstruit champ par champ : il finit persisté dans
       // config.json, donc rien d'arbitraire ne doit y entrer.
       const skin = asSkin(rawSkin) as Skin;
       const name = folderName === undefined ? undefined : asString(folderName, 200);
+      // Les dossiers retenus finissent dans config.json et servent à rouvrir
+      // l'archive plus tard : ils sont bornés comme le reste.
+      const chosen = asGroups(groups);
 
       const abort = new AbortController();
       running.set(skin.id, abort);
@@ -357,6 +365,7 @@ function registerIpc() {
       try {
         record = await getInstaller(asString(content, 32) as ContentType).install(skin, cfg, {
           folderName: name,
+          groups: chosen,
           signal: abort.signal,
           // Le rendu est limité à ~20 messages par seconde : un gros zip génère
           // des centaines de ticks, inutile de tous les faire traverser l'IPC.
@@ -380,6 +389,69 @@ function registerIpc() {
       return record;
     }
   );
+
+  /**
+   * Ce que contient une archive, SANS la télécharger.
+   *
+   * Certaines archives son proposent plusieurs dossiers qui posent les mêmes
+   * banques : il faut en choisir un. La question se pose donc AVANT le
+   * téléchargement, pas après dix minutes d'attente. Deux requêtes Range sur
+   * l'index du zip suffisent.
+   *
+   * Rend `null` quand il n'y a rien à demander : archive plate, dossier unique,
+   * ou serveur qui ne sait pas servir un fragment. L'installation suit alors
+   * son cours normal.
+   */
+  ipcMain.handle("content:inspect", async (_e, rawSkin: unknown) => {
+    const cfg = await requireGameDir();
+    const skin = asSkin(rawSkin) as Skin;
+    const entries = await readZipIndex(skin.file.link);
+    if (!entries) return null;
+
+    // Le catalogue de banques du jeu sert à reconnaître les variantes préfixées
+    // (English_aircraft_gui.bank) : sans lui, elles passeraient pour des banques
+    // ordinaires et seraient posées sous un nom que le jeu ne lit pas.
+    const plan = planSoundLayout(entries, await readStockBanks(cfg));
+    if (!plan || plan.groups.length < 2) return null;
+    // Le renderer n'a pas besoin des chemins complets des entrées : il affiche
+    // des dossiers et rend une liste de dossiers.
+    return {
+      needsChoice: plan.needsChoice,
+      groups: plan.groups.map((g) => ({
+        dir: g.dir,
+        count: g.files.length,
+        clashesWith: g.clashesWith,
+      })),
+      selected: defaultSelection(plan),
+    };
+  });
+
+  /**
+   * Pose ou retire un contenu sans toucher à ce qui a été téléchargé.
+   *
+   * Le renderer ne désigne QUE quoi activer : on reprend l'enregistrement
+   * réellement stocké, jamais celui qu'il transmet. Sans ça, un enregistrement
+   * forgé ferait écrire n'importe où.
+   */
+  ipcMain.handle("content:setActive", async (_e, raw: unknown, active: unknown) => {
+    const cfg = await requireGameDir();
+    const ref = asRecordRef(raw);
+    const owned = cfg.installed.find(
+      (r) => r.contentType === ref.contentType && r.lang_group === ref.lang_group
+    );
+    if (!owned) fail(ERR.notInstalled, String(ref.lang_group));
+
+    const installer = getInstaller(owned.contentType);
+    if (!installer.setActive) fail(ERR.noActivation, owned.contentType);
+
+    const next = await installer.setActive(owned, active === true, cfg);
+    await store.set({
+      installed: cfg.installed.map((r) =>
+        r.contentType === next.contentType && r.lang_group === next.lang_group ? next : r
+      ),
+    });
+    return next;
+  });
 
   /** Coupe une installation en cours. Sans effet si elle est déjà terminée. */
   ipcMain.handle("content:cancelInstall", (_e, id: unknown) => {
@@ -545,6 +617,10 @@ if (!primary) {
     setSiteHosts(endpoints.siteHosts);
 
     store = createConfigStore(path.join(userData, "config.json"));
+    // Les archives des mods son restent tant que le mod est installé : c'est ce
+    // qui permet de le réactiver sans refaire 850 Mo. Hors du dossier du jeu,
+    // qui peut vivre sur un autre disque que la configuration.
+    setLibraryDir(path.join(userData, "library"));
     // La liste des véhicules sert à lire la structure des archives de viseurs.
     // On l'amorce depuis le repli embarqué : une installation ne doit pas
     // dépendre du fait que le joueur ait ouvert la barre de filtres.

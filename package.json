@@ -18,7 +18,9 @@
     "release": "npm run build && electron-builder --publish always",
     "smoke:sight": "tsx test/sight.smoke.ts",
     "smoke:sight-overwrite": "tsx test/sight-overwrite.smoke.ts",
-    "smoke:network": "tsx test/network.smoke.ts"
+    "smoke:network": "tsx test/network.smoke.ts",
+    "smoke:sound": "tsx test/sound.smoke.ts",
+    "smoke:sound-install": "tsx test/sound-install.smoke.ts"
   },
   "dependencies": {
     "adm-zip": "^0.6.0",

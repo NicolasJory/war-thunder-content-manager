@@ -167,6 +167,21 @@ export function asAuthorRef(v: unknown): { id: number; nickname: string; avatar:
   };
 }
 
+/**
+ * Dossiers d'une archive son retenus par le joueur.
+ *
+ * Ils viennent du renderer, sont persistés dans config.json et servent plus
+ * tard à rouvrir l'archive : ils sont bornés comme tout ce qui entre. Le
+ * contenu n'est pas assaini ici — l'installeur ne les compare qu'aux dossiers
+ * réellement présents dans le zip, un nom inventé ne désigne rien.
+ */
+export function asGroups(v: unknown): string[] | undefined {
+  if (v === undefined || v === null) return undefined;
+  if (!Array.isArray(v)) fail(ERR.badArgs, "groups");
+  if (v.length > 500) fail(ERR.badArgs, "groups");
+  return v.map((g) => asString(g, 300));
+}
+
 /** Un enregistrement d'installation ne sert qu'à DÉSIGNER quoi retirer. */
 export function asRecordRef(v: unknown): { contentType: string; lang_group: number } {
   if (!v || typeof v !== "object") fail(ERR.badArgs, "enregistrement absent");

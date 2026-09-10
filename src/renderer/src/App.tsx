@@ -241,12 +241,14 @@ function Shell({
             {t("favorites")}
             <span className="nav-count">{config.favorites.length}</span>
           </button>
-          {/* Les mods son demandent en plus de patcher config.blk : l'entrée
-              reste visible pour dire qu'ils arrivent, sans faire croire. */}
-          <button className="nav-item" disabled title={t("soon")}>
+          <button
+            className={
+              tab === "browse" && content === "sound" && !author ? "nav-item active" : "nav-item"
+            }
+            onClick={() => switchContent("sound")}
+          >
             <IconSound size={16} />
             {t("navSounds")}
-            <span className="nav-count">{t("soon")}</span>
           </button>
         </nav>
 
