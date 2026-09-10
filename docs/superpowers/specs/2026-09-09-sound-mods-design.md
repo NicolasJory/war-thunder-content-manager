@@ -166,10 +166,17 @@ Pour les 15 archives plates ou à dossier unique, l'écran ne s'affiche pas.
 
 ## Ce qui a changé dans le code existant
 
-**`downloadZip` écrit sur disque.** Il accumulait les morceaux en mémoire et
-finissait par un `Buffer.concat`. À 850 Mo ça faisait un tampon de 850 Mo dans
-le process principal, plus la copie que garde adm-zip. Le flux s'écrit
-maintenant au fil de l'eau, et adm-zip lit l'archive depuis le disque.
+**`downloadZip` écrit sur disque.** Il accumulait les morceaux dans un tableau
+puis appelait `Buffer.concat` : les deux vivaient en même temps, soit deux fois
+la taille de l'archive. Le flux part maintenant sur disque et rien ne s'accumule.
+
+Plafond mesuré, pas supposé : sur ETSMIV (853 Mo, la plus grosse du catalogue),
+l'installation prend 10 s et culmine à 1,7 Go de RSS. `adm-zip` 0.6 fait un
+`fs.readFileSync` même quand on lui passe un chemin, donc l'archive entière
+repasse en mémoire, et `getData()` y ajoute la plus grosse entrée décompressée
+(313 Mo). Le pic vaut « archive + plus grosse banque ». Descendre plus bas
+demande un lecteur de zip qui lise vraiment à la demande (yauzl), ce qui touche
+les trois installers : à faire si quelqu'un se plaint, pas avant.
 
 Les trois garde-fous restent : hôte en liste blanche, plafond de taille, coupure
 après une minute sans octet. Le plafond passe à 1 Go, sinon deux mods sur 50

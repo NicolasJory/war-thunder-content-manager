@@ -505,10 +505,19 @@ async function fetchAllowed(
 /**
  * Téléchargement en flux, écrit AU FIL DE L'EAU dans `dest`.
  *
- * L'ancienne version accumulait les morceaux en mémoire et finissait par un
- * `Buffer.concat`. Ça passait pour un camouflage de 90 Mo ; un mod son monte à
- * 853 Mo, et il aurait fallu ce tampon PLUS la copie que garde adm-zip. Écrit
- * sur disque, adm-zip lit les entrées à la demande et la mémoire ne bouge pas.
+ * L'ancienne version accumulait les morceaux dans un tableau puis appelait
+ * `Buffer.concat` : les deux vivaient en même temps, soit deux fois la taille
+ * de l'archive. Ça passait pour un camouflage de 90 Mo, pas pour un mod son de
+ * 853 Mo. Le flux part maintenant sur disque et rien ne s'accumule ici.
+ *
+ * Plafond connu, mesuré sur ETSMIV (853 Mo, la plus grosse du catalogue) :
+ * l'installation culmine à 1,7 Go de RSS. `adm-zip` 0.6 fait un
+ * `fs.readFileSync` même quand on lui passe un CHEMIN (adm-zip.js:72), donc
+ * l'archive entière repasse en mémoire, puis `getData()` y ajoute la plus
+ * grosse entrée décompressée (313 Mo ici). Le pic vaut donc à peu près
+ * « archive + plus grosse banque ». Descendre plus bas demande un lecteur de
+ * zip qui lise vraiment à la demande — yauzl — et ça change les trois
+ * installers d'un coup : à faire seulement si quelqu'un se plaint.
  *
  * `file.size` sert de total de repli quand le serveur n'annonce pas de longueur.
  *
