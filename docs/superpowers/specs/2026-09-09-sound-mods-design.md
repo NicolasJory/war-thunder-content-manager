@@ -114,9 +114,18 @@ with RCSM » : il s'attend à ce qu'on l'active en même temps que RCSM, l'un po
 les avions, l'autre pour les chars. Les deux livrent `masterbank.bank`.
 
 Règle : le dernier activé gagne le fichier. `meta.activatedAt` donne l'ordre.
-Le mod recouvert reste actif pour tous ses autres fichiers, et l'interface
-signale lequel il a perdu, comme les viseurs le font déjà
-(`sightInstaller`, champ `meta.overwrites`).
+Le mod recouvert reste actif pour tous ses autres fichiers.
+
+L'avertissement arrive **avant** l'action, pas après. La boîte d'installation
+compare les banques que la sélection va poser à celles des mods déjà en
+service, et le dit — avant de lancer 850 Mo de téléchargement. Décocher le
+groupe fautif fait disparaître l'avertissement. Même chose sur le bouton
+d'activation d'un mod déjà téléchargé, où le calcul se fait sans réseau : le
+record garde la liste de ce qu'il avait posé.
+
+Deux formulations, parce que l'écart compte. Un mod qui perd quelques banques
+continue de jouer le reste ; un mod qui les perd toutes est muet, et lui dire
+« quelques sons remplacés » serait faux.
 
 Au moment de désactiver ou de désinstaller, retirer les fichiers ne suffit
 pas : si un mod en dessous fournissait `masterbank.bank`, le jeu se
@@ -187,10 +196,11 @@ déjà là, on n'y touche ni à l'aller ni au retour.
 **`Installer.setActive`** est optionnel : seul le son l'implémente. Un
 camouflage est installé ou ne l'est pas, il n'a pas d'état intermédiaire.
 
-**Renderer.** L'entrée « Mods son » de la barre latérale est active. Le groupe
-`sound` s'affiche dans Installés avec son état et son bouton de bascule. La
-boîte d'installation porte l'écran de choix, et une confirmation apparaît avant
-de désinstaller un mod en service — elle propose la désactivation comme porte de
+**Renderer.** L'entrée « Mods son » de la barre latérale est active. L'état et
+la bascule (`SoundState`) vivent dans `shell.tsx` et servent deux vues :
+Installés et la fiche détail. La boîte d'installation porte l'écran de choix et
+l'avertissement de recouvrement, et une confirmation apparaît avant de
+désinstaller un mod en service — elle propose la désactivation comme porte de
 sortie.
 
 **Corrigé au passage :** deux défauts que la fusion des onglets avait laissés
@@ -220,11 +230,19 @@ archives et un dossier de jeu factice. Le check qui compte : deux mods livrent
 banque du premier au lieu de laisser un trou. Sans ça, désactiver un mod
 casserait celui du dessous en silence.
 
+`coveredBy` a ses propres checks : recouvrement partiel, total, casse
+différente, mod inactif, réinstallation de soi-même, et plusieurs mods touchés
+d'un coup.
+
 Vérifié en plus dans l'application réelle, sur `Yuka_vws_2.0` : l'écran de choix
 s'affiche avec ses trois variantes, cocher l'une décoche les autres, les banques
 arrivent dans `sound/mod` sous le nom que le jeu lit, `config.blk` gagne sa
 ligne, la désactivation vide le dossier et rend le fichier à son état d'origine,
 la réactivation ne retélécharge rien.
+
+Et sur deux mods réels qui se disputent `crew_dialogs_common.bank` (`TR_5+`
+puis `Ooarai`) : le premier n'affiche rien, le second annonce le recouvrement
+avant le téléchargement.
 
 ## Annexe : les 20 archives relevées
 

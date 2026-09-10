@@ -25,7 +25,7 @@ import {
 } from "./api";
 import { IconChevronLeft, IconChevronRight, IconClose } from "./icons";
 import { Avatar } from "./SkinCard";
-import { InstallButton, useShell } from "./shell";
+import { InstallButton, SoundState, useShell } from "./shell";
 import { useFocusTrap } from "./useFocusTrap";
 import { appUrl, shareUrl } from "../../shared/deepLink";
 
@@ -39,7 +39,8 @@ interface Props {
 }
 
 export function Detail({ skin, onTag, onAuthor, isFavorite, onToggleFavorite, onClose }: Props) {
-  const { t, locale, openExternal, copy } = useShell();
+  const { t, locale, openExternal, copy, recordFor } = useShell();
+  const record = recordFor(skin.lang_group);
   const images = imagesOf(skin);
   const [index, setIndex] = useState(0);
   const [fallback, setFallback] = useState<Record<number, boolean>>({});
@@ -296,6 +297,9 @@ export function Detail({ skin, onTag, onAuthor, isFavorite, onToggleFavorite, on
 
           <div className="sheet-foot">
             <p className="sheet-note">{t("localOnly")}</p>
+            {/* Un mod son installé peut sortir du jeu sans être supprimé : la
+                bascule passe avant la désinstallation, qui reste définitive. */}
+            {record?.contentType === "sound" && <SoundState record={record} />}
             <InstallButton skin={skin} withSize />
             <div className="sheet-actions">
               {/* Le lien partagé est l'URL publique : elle marche pour tout le

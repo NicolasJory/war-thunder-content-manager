@@ -412,14 +412,16 @@ function registerIpc() {
     // (English_aircraft_gui.bank) : sans lui, elles passeraient pour des banques
     // ordinaires et seraient posées sous un nom que le jeu ne lit pas.
     const plan = planSoundLayout(entries, await readStockBanks(cfg));
-    if (!plan || plan.groups.length < 2) return null;
+    if (!plan) return null;
     // Le renderer n'a pas besoin des chemins complets des entrées : il affiche
-    // des dossiers et rend une liste de dossiers.
+    // des dossiers, rend une liste de dossiers, et compare les noms de banques
+    // posées à celles des mods déjà actifs pour prévenir d'un recouvrement.
     return {
       needsChoice: plan.needsChoice,
       groups: plan.groups.map((g) => ({
         dir: g.dir,
         count: g.files.length,
+        files: g.files,
         clashesWith: g.clashesWith,
       })),
       selected: defaultSelection(plan),

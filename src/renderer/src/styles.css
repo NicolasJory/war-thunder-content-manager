@@ -1889,3 +1889,27 @@ code {
 .dot.on {
   background: var(--accent-hi);
 }
+
+/* ------------------------- Avertissement de recouvrement ------------------------- */
+
+/* Le ton du danger, pas sa force : rien n'est perdu, un mod en couvre un autre
+   et ça se défait en le désactivant. */
+.overwrite-warn {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--danger-line);
+  border-radius: var(--r);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+.overwrite-warn p {
+  margin: 0;
+}
+.overwrite-title {
+  font-weight: 600;
+  color: var(--danger);
+}

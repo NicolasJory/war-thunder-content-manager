@@ -19,6 +19,8 @@ import {
   soundEntriesFor,
   targetName,
 } from "../src/main/soundLayout.js";
+import { coveredBy } from "../src/renderer/src/api.js";
+import type { InstalledRecord } from "../src/main/wtLive.js";
 
 let passed = 0;
 const ok = (label: string) => {
@@ -383,6 +385,66 @@ const REAL = [
   const { changed } = patchSoundBlock(broken, false);
   assert.equal(changed, false);
   ok("accolade jamais refermée : aucun retrait tenté");
+}
+
+// ------------------------- Recouvrement d'un mod actif ------------------------- //
+
+console.log("\nAvertissement de recouvrement");
+
+/** Un mod son suivi, dans l'état où l'application le persiste. */
+const soundRecord = (
+  lang_group: number,
+  name: string,
+  files: string[],
+  active: boolean
+): InstalledRecord => ({
+  contentType: "sound",
+  lang_group,
+  path: "sound/mod",
+  name,
+  installedAt: 0,
+  meta: { files, groups: [""], active, activatedAt: lang_group, addedEnableMod: false, overwrites: [], zip: "" },
+});
+
+{
+  const rcsm = soundRecord(1, "RCSM", ["masterbank.bank", "tanks_engines.bank"], true);
+  const solo = soundRecord(2, "Free-Bird", ["aircraft_guns.bank"], true);
+  const dormant = soundRecord(3, "OPEX", ["masterbank.bank"], false);
+  const installed = [rcsm, solo, dormant];
+
+  // Une banque commune : RCSM perd masterbank, garde ses moteurs.
+  const partiel = coveredBy(["masterbank.bank"], installed);
+  assert.deepEqual(partiel, [{ name: "RCSM", total: false }]);
+  ok("recouvrement partiel : le mod est nommé, marqué non-total");
+
+  // Toutes ses banques : RCSM ne jouerait plus rien.
+  const complet = coveredBy(["masterbank.bank", "tanks_engines.bank"], installed);
+  assert.deepEqual(complet, [{ name: "RCSM", total: true }]);
+  ok("recouvrement complet : marqué total, la phrase changera");
+
+  // La casse ne doit pas faire manquer un conflit : Windows ne distingue pas.
+  assert.deepEqual(coveredBy(["MasterBank.bank"], installed), [{ name: "RCSM", total: false }]);
+  ok("recouvrement repéré malgré une casse différente");
+
+  // Un mod téléchargé mais sorti du jeu ne peut rien perdre.
+  assert.deepEqual(coveredBy(["masterbank.bank"], [dormant]), []);
+  ok("mod inactif : jamais signalé, il n'est pas dans le jeu");
+
+  // On ne se signale pas soi-même lors d'une réinstallation.
+  assert.deepEqual(coveredBy(["masterbank.bank"], installed, 1), []);
+  ok("réinstallation du même mod : il ne se recouvre pas lui-même");
+
+  // Aucun nom en commun : rien à dire.
+  assert.deepEqual(coveredBy(["hangar.bank"], installed), []);
+  ok("aucune banque commune : aucun avertissement");
+
+  // Plusieurs mods touchés d'un coup, chacun avec son verdict.
+  const deux = coveredBy(["masterbank.bank", "tanks_engines.bank", "aircraft_guns.bank"], installed);
+  assert.deepEqual(deux, [
+    { name: "RCSM", total: true },
+    { name: "Free-Bird", total: true },
+  ]);
+  ok("plusieurs mods touchés : chacun rend son propre verdict");
 }
 
 console.log(`\n${passed} checks OK\n`);

@@ -99,7 +99,8 @@ type DeepLinkValue =
  */
 export interface ArchiveChoice {
   needsChoice: boolean;
-  groups: Array<{ dir: string; count: number; clashesWith: string[] }>;
+  /** `files` porte les noms d'ARRIVÉE, ceux qui atterriront dans `sound/mod`. */
+  groups: Array<{ dir: string; count: number; files: string[]; clashesWith: string[] }>;
   /** Sélection de départ : les additifs, plus un de chaque famille exclusive. */
   selected: string[];
 }
@@ -129,6 +130,41 @@ export function soundMeta(record: InstalledRecord): SoundMeta | null {
 
 /** Un mod son posé dans le jeu, par opposition à simplement téléchargé. */
 export const isActive = (record: InstalledRecord): boolean => soundMeta(record)?.active === true;
+
+/** Ce qu'un mod son actif perdrait si `files` était posé par-dessus. */
+export interface Covered {
+  name: string;
+  /** Toutes ses banques sont recouvertes : il ne jouerait plus rien du tout. */
+  total: boolean;
+}
+
+/**
+ * Mods son actifs qu'une pose de `files` recouvrirait.
+ *
+ * Le jeu ne lit qu'un fichier par nom dans `sound/mod` : poser
+ * `masterbank.bank` par-dessus celui d'un autre mod le remplace. L'autre reste
+ * actif pour ses banques restantes, sauf si on les prend toutes — auquel cas il
+ * ne joue plus rien, et le dire « remplace quelques sons » serait mentir.
+ *
+ * Sert avant l'action, dans la boîte d'installation et sur le bouton d'activation.
+ */
+export function coveredBy(
+  files: string[],
+  installed: InstalledRecord[],
+  exceptGroup?: number
+): Covered[] {
+  const laid = new Set(files.map((f) => f.toLowerCase()));
+  const out: Covered[] = [];
+
+  for (const record of installed) {
+    if (record.lang_group === exceptGroup || !isActive(record)) continue;
+    const theirs = soundMeta(record)?.files ?? [];
+    if (theirs.length === 0) continue;
+    const hit = theirs.filter((f) => laid.has(f.toLowerCase()));
+    if (hit.length > 0) out.push({ name: record.name, total: hit.length === theirs.length });
+  }
+  return out;
+}
 
 export interface ForeignFolder {
   name: string;

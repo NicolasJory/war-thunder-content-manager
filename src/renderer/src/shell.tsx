@@ -20,12 +20,14 @@ import {
 } from "react";
 import {
   api,
+  coveredBy,
   formatSize,
   isActive,
   setPages,
   soundMeta,
   suggestName,
   type ArchiveChoice,
+  type Covered,
   type ContentType,
   type InstalledRecord,
   type Progress,
@@ -545,21 +547,38 @@ function InstallDialog({
     return [...map.entries()];
   }, [choice]);
 
+  /**
+   * Ce que cette installation recouvrirait chez les mods son déjà en service.
+   *
+   * Se recalcule à chaque case cochée : décocher le groupe qui pose
+   * `masterbank.bank` fait disparaître l'avertissement, ce qui est exactement
+   * l'information utile.
+   */
+  const covered = useMemo(() => {
+    if (!choice) return [];
+    const files = choice.groups
+      .filter((g) => selected.includes(g.dir))
+      .flatMap((g) => g.files);
+    return coveredBy(files, installed, skin.lang_group);
+  }, [choice, selected, installed, skin.lang_group]);
+
   const trimmed = name.trim();
   // Le main réassainit de toute façon ; ici on prévient juste avant de cliquer.
   const invalid = !trimmed || /[<>:"|?*\\/]/.test(trimmed);
   const taken = installed.some(
     (r) => r.name.toLowerCase() === trimmed.toLowerCase() && r.lang_group !== skin.lang_group
   );
-  const nothingPicked = choice !== null && selected.length === 0;
+  // Un seul groupe : rien à choisir, la case unique n'apporterait rien.
+  const showChooser = (choice?.groups.length ?? 0) > 1;
+  const nothingPicked = showChooser && selected.length === 0;
   const blocked = invalid || probing || nothingPicked;
 
-  const confirm = () => !blocked && onConfirm(trimmed, choice ? selected : undefined);
+  const confirm = () => !blocked && onConfirm(trimmed, showChooser ? selected : undefined);
 
   return (
     <div className="modal-backdrop" onClick={onCancel}>
       <div
-        className={choice ? "modal" : "modal small"}
+        className={showChooser ? "modal" : "modal small"}
         ref={box}
         tabIndex={-1}
         role="dialog"
@@ -594,7 +613,7 @@ function InstallDialog({
             </p>
           )}
 
-          {choice && (
+          {showChooser && choice && (
             <section className="choose">
               <h3>{t("chooseTitle")}</h3>
               {families.map(([parent, groups]) => {
@@ -624,6 +643,8 @@ function InstallDialog({
               {nothingPicked && <p className="error">{t("chooseNone")}</p>}
             </section>
           )}
+
+          <OverwriteWarning covered={covered} />
 
           <div className="modal-actions">
             <button className="btn ghost" onClick={onCancel}>
@@ -750,6 +771,82 @@ function Progress({
 }
 
 /** Bouton partagé par la grille, la fiche et la page auteur. */
+/**
+ * Prévient qu'une pose va recouvrir des mods son déjà en service.
+ *
+ * Le jeu ne lit qu'un fichier par nom : deux mods qui livrent `masterbank.bank`
+ * ne cohabitent pas sur ce fichier-là. Ça se disait jusqu'ici APRÈS coup, par
+ * une notification. Le savoir avant de lancer 850 Mo de téléchargement est
+ * autrement plus utile.
+ *
+ * Deux formulations, parce que l'écart compte : un mod qui perd quelques
+ * banques continue de jouer, un mod qui les perd toutes est muet.
+ */
+function OverwriteWarning({ covered }: { covered: Covered[] }) {
+  const { t } = useShell();
+  if (covered.length === 0) return null;
+
+  const names = (list: Covered[]) => list.map((c) => c.name).join(", ");
+  const total = covered.filter((c) => c.total);
+  const partial = covered.filter((c) => !c.total);
+
+  return (
+    <div className="overwrite-warn">
+      <p className="overwrite-title">{t("overwriteWarnTitle")}</p>
+      {total.length > 0 && <p>{t("overwriteWarnAll", { names: names(total) })}</p>}
+      {partial.length > 0 && <p>{t("overwriteWarnSome", { names: names(partial) })}</p>}
+    </div>
+  );
+}
+
+/**
+ * L'état d'un mod son, et le bouton qui le fait basculer.
+ *
+ * Un mod son est le seul contenu à avoir trois états au lieu de deux : pas
+ * téléchargé, téléchargé et posé dans le jeu, téléchargé et sorti du jeu. Le
+ * désactiver garde son archive, ce qui évite de refaire 850 Mo pour y revenir.
+ *
+ * Vit ici plutôt que dans Installés : la fiche détail le montre aussi, et
+ * dupliquer la bascule aurait fait deux endroits à corriger.
+ */
+export function SoundState({ record }: { record: InstalledRecord }) {
+  const { t, setActive, busyGroup, installed } = useShell();
+  const meta = soundMeta(record);
+  const busy = busyGroup === record.lang_group;
+  const active = isActive(record);
+
+  // Ce que l'activation recouvrirait. Les banques sont connues sans réseau :
+  // le record garde la liste de ce qu'il avait posé, et il reposera la même.
+  const covered = useMemo(
+    () => (active ? [] : coveredBy(meta?.files ?? [], installed, record.lang_group)),
+    [active, meta, installed, record.lang_group]
+  );
+
+  return (
+    <div className="sound-state">
+      <p className="installed-note muted">
+        <span className={active ? "dot on" : "dot"} aria-hidden="true" />
+        {active ? t("soundActive") : t("soundInactive")}
+        {meta ? ` · ${t("soundBankCount", { n: meta.files.length })}` : ""}
+      </p>
+      <OverwriteWarning covered={covered} />
+      <button
+        className={active ? "btn full" : "btn primary full"}
+        disabled={busy}
+        onClick={() => setActive(record, !active)}
+      >
+        {busy ? (
+          <>
+            <span className="spinner" /> {t(active ? "deactivating" : "activating")}
+          </>
+        ) : (
+          t(active ? "deactivate" : "activate")
+        )}
+      </button>
+    </div>
+  );
+}
+
 export function InstallButton({
   skin,
   block = true,

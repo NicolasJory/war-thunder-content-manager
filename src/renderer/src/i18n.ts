@@ -219,6 +219,11 @@ const en = {
   chooseExclusiveHelp: "These replace the same sound files, so only one can go in.",
   chooseRootGroup: "Base files",
   chooseNone: "Keep at least one part.",
+  overwriteWarnTitle: "This will cover mods already in the game",
+  overwriteWarnAll:
+    "{names} would go silent: every one of its sound files gets replaced. Deactivate it if you would rather not keep it that way.",
+  overwriteWarnSome:
+    "Some sounds from {names} get replaced. Those mods keep playing everything else.",
   sightVehicleCount: "{n} vehicles",
   installFailed: "Install failed: {reason}",
   uninstallFailed: "Removal failed: {reason}",
@@ -450,6 +455,11 @@ const fr: Record<Key, string> = {
     "Ces versions remplacent les mêmes fichiers son : une seule peut entrer.",
   chooseRootGroup: "Fichiers de base",
   chooseNone: "Retiens au moins un élément.",
+  overwriteWarnTitle: "Ça va recouvrir des mods déjà dans le jeu",
+  overwriteWarnAll:
+    "{names} ne jouera plus rien : tous ses fichiers son sont remplacés. Désactive-le si tu ne veux pas le garder ainsi.",
+  overwriteWarnSome:
+    "Des sons de {names} seront remplacés. Ces mods continuent de jouer tout le reste.",
   sightVehicleCount: "{n} véhicules",
   installFailed: "Échec de l'installation : {reason}",
   uninstallFailed: "Échec de la désinstallation : {reason}",
@@ -680,6 +690,11 @@ const ru: Record<Key, string> = {
     "Эти версии заменяют одни и те же звуковые файлы, поэтому подойдёт только одна.",
   chooseRootGroup: "Основные файлы",
   chooseNone: "Выберите хотя бы одну часть.",
+  overwriteWarnTitle: "Это перекроет моды, уже стоящие в игре",
+  overwriteWarnAll:
+    "{names} замолчит: все его звуковые файлы будут заменены. Отключите его, если не хотите оставлять его в таком виде.",
+  overwriteWarnSome:
+    "Часть звуков из {names} будет заменена. Остальное эти моды продолжат воспроизводить.",
   sightVehicleCount: "{n} техники",
   installFailed: "Не удалось установить: {reason}",
   uninstallFailed: "Не удалось удалить: {reason}",
@@ -900,6 +915,10 @@ const zh: Record<Key, string> = {
   chooseExclusiveHelp: "这些版本会替换相同的音效文件，只能选择其中一个。",
   chooseRootGroup: "基础文件",
   chooseNone: "请至少保留一项。",
+  overwriteWarnTitle: "这会覆盖游戏中已有的模组",
+  overwriteWarnAll:
+    "{names} 将不再发出任何声音：它的音效文件会被全部替换。若不想保持这种状态，请停用它。",
+  overwriteWarnSome: "{names} 的部分音效会被替换。这些模组的其余音效仍会正常播放。",
   sightVehicleCount: "{n} 辆载具",
   installFailed: "安装失败：{reason}",
   uninstallFailed: "移除失败：{reason}",

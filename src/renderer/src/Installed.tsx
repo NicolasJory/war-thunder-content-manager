@@ -18,16 +18,14 @@ import {
   formatDate,
   formatSize,
   hasUpdate,
-  isActive,
   skinLabel,
-  soundMeta,
   type ForeignFolder,
   type InstalledRecord,
   type Skin,
 } from "./api";
 import { IconClose, IconFolder, IconInfo } from "./icons";
 import { SkinCard } from "./SkinCard";
-import { useShell } from "./shell";
+import { SoundState, useShell } from "./shell";
 
 /** Une bibliotheque se range par date, par nom ou par poids : rien d'autre. */
 const SORTS = [
@@ -352,39 +350,3 @@ function FallbackCard({ record }: { record: InstalledRecord }) {
   );
 }
 
-/**
- * L'état d'un mod son, et le bouton qui le fait basculer.
- *
- * Un mod son est le seul contenu à avoir trois états au lieu de deux : pas
- * téléchargé, téléchargé et posé dans le jeu, téléchargé et sorti du jeu. Le
- * désactiver garde son archive, ce qui évite de refaire 850 Mo pour y revenir.
- */
-function SoundState({ record }: { record: InstalledRecord }) {
-  const { t, setActive, busyGroup } = useShell();
-  const meta = soundMeta(record);
-  const busy = busyGroup === record.lang_group;
-  const active = isActive(record);
-
-  return (
-    <div className="sound-state">
-      <p className="installed-note muted">
-        <span className={active ? "dot on" : "dot"} aria-hidden="true" />
-        {active ? t("soundActive") : t("soundInactive")}
-        {meta ? ` · ${t("soundBankCount", { n: meta.files.length })}` : ""}
-      </p>
-      <button
-        className={active ? "btn full" : "btn primary full"}
-        disabled={busy}
-        onClick={() => setActive(record, !active)}
-      >
-        {busy ? (
-          <>
-            <span className="spinner" /> {t(active ? "deactivating" : "activating")}
-          </>
-        ) : (
-          t(active ? "deactivate" : "activate")
-        )}
-      </button>
-    </div>
-  );
-}
