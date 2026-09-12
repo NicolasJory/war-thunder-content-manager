@@ -1,34 +1,32 @@
 /**
- * Le véhicule que le joueur a sous les yeux, lu dans le fichier de profil.
+ * Le véhicule que le joueur a sous les yeux.
  *
- * `Saves/<uid>/production/global.blk` porte un bloc `selectedAir` — le nom date
- * de l'époque où le jeu n'avait que des avions, il couvre aujourd'hui tous les
- * types :
+ * DEUX SOURCES, et l'ordre compte.
  *
- *     selectedAir{
- *       current_model:t="ussr_t_44_100"
- *       france:t="fr_amx_30_1972"
- *       germany:t="germ_leopard_I"
- *       ussr:t="ussr_su_100p"
- *     }
+ * 1. Le serveur HTTP que le jeu ouvre sur `127.0.0.1:8111`, fourni par Gaijin
+ *    pour les outils tiers. `/indicators` rend `{"valid":true,"type":"su-9"}`,
+ *    et il suit à l'instant près. Vérifié dans le panneau lui-même, jeu
+ *    lancé : Su-9, puis Yak-15 deux secondes plus tard, puis MiG-9 — la
+ *    latence tient dans le cycle d'interrogation.
  *
- * `current_model` est le véhicule sélectionné, les autres clés retiennent le
- * dernier choix par nation.
+ * 2. `Saves/<uid>/production/global.blk`, bloc `selectedAir`. C'était la
+ *    première source, et elle s'est révélée mauvaise : sur la même session de
+ *    huit minutes elle n'a PAS bougé une seule fois. Le jeu ne l'écrit
+ *    qu'épisodiquement, d'où le retard d'une trentaine de secondes signalé.
+ *    Elle reste utile quand le jeu ne tourne pas : elle garde le dernier
+ *    véhicule de la session précédente.
  *
- * Vérifié en conditions réelles : le jeu réécrit le fichier AU MOMENT du
- * changement de véhicule, pas à la fermeture. Deux bascules observées, dont un
- * changement de nation. La détection est donc vivante, pas différée.
+ * Les identifiants des deux sources sont ceux de la taxonomie de Live —
+ * `su-9`, `yak-15`, `mig-9_ussr` y figurent tous — donc le filtre véhicule de
+ * l'application les accepte sans table de correspondance.
  *
- * Ces identifiants sont ceux de la taxonomie de Live — `ussr_t_44_100` y
- * désigne « T-44-100 » — donc le filtre véhicule de l'application les accepte
- * tels quels, sans table de correspondance.
- *
- * On LIT, rien d'autre. Aucun contact avec le processus du jeu : c'est la même
- * nature d'opération que la lecture de `config.blk`.
+ * On LIT, rien d'autre : une requête GET sur la boucle locale et un fichier
+ * sous Documents. Aucun contact avec le processus du jeu.
  */
 
-import { promises as fs, watchFile, unwatchFile } from "fs";
+import { promises as fs } from "fs";
 import path from "path";
+import { endpoints } from "./wtLive.js";
 import { resolveProfileDir } from "./wtProfile.js";
 
 export interface VehicleSelection {
@@ -39,6 +37,33 @@ export interface VehicleSelection {
 }
 
 const VIDE: VehicleSelection = { current: null, byNation: {} };
+
+// ------------------------- Source 1 : le serveur du jeu ------------------------- //
+
+/**
+ * Véhicule courant selon le jeu lui-même, ou `null` s'il ne répond pas.
+ *
+ * Le délai est court volontairement : cette lecture se répète, et un jeu qui
+ * ne tourne pas doit se constater tout de suite plutôt que faire attendre.
+ */
+export async function readFromGame(): Promise<string | null> {
+  try {
+    const res = await fetch(`${endpoints().gameApi}/indicators`, {
+      signal: AbortSignal.timeout(700),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { valid?: boolean; type?: unknown };
+    // `valid: false` arrive entre deux écrans : le jeu tourne mais n'est dans
+    // aucun véhicule. Ce n'est pas une panne, c'est « rien à dire ».
+    if (!data.valid || typeof data.type !== "string" || !data.type) return null;
+    return data.type;
+  } catch {
+    // Jeu fermé, serveur pas encore levé, ou transition d'écran.
+    return null;
+  }
+}
+
+// ------------------------- Source 2 : le fichier de profil ------------------------- //
 
 /**
  * Extrait le bloc `selectedAir`. Les accolades se comptent plutôt que de se
@@ -81,11 +106,11 @@ export async function globalBlkPath(): Promise<string | null> {
 }
 
 /**
- * Lit la sélection courante. Rend une sélection vide plutôt que d'échouer :
- * ne pas savoir quel véhicule est choisi n'est pas une erreur, c'est
- * simplement l'état d'un joueur qui n'a pas lancé le jeu.
+ * Lit le profil. Rend une sélection vide plutôt que d'échouer : ne pas savoir
+ * quel véhicule est choisi n'est pas une erreur, c'est l'état d'un joueur qui
+ * n'a pas encore lancé le jeu.
  */
-export async function readSelection(): Promise<VehicleSelection> {
+export async function readFromProfile(): Promise<VehicleSelection> {
   const file = await globalBlkPath();
   if (!file) return VIDE;
   try {
@@ -95,46 +120,77 @@ export async function readSelection(): Promise<VehicleSelection> {
   }
 }
 
+// ------------------------- Les deux ensemble ------------------------- //
+
+/**
+ * Le véhicule courant, serveur du jeu d'abord, profil en repli.
+ *
+ * Les entrées par nation ne viennent que du profil : le serveur ne les connaît
+ * pas, et elles bougent assez peu pour qu'une lecture épisodique suffise.
+ */
+export async function readSelection(): Promise<VehicleSelection> {
+  const [vivant, profil] = await Promise.all([readFromGame(), readFromProfile()]);
+  return { current: vivant ?? profil.current, byNation: profil.byNation };
+}
+
+/**
+ * Le serveur disparaît une à trois secondes à chaque changement d'écran.
+ * Retomber aussitôt sur le profil ferait osciller l'affichage entre le vrai
+ * véhicule et celui, périmé, du fichier. On garde donc la dernière réponse
+ * vivante pendant ce délai avant de céder la main.
+ */
+const GRACE_MS = 6000;
+
 /**
  * Prévient à chaque changement de véhicule, et rend de quoi arrêter d'écouter.
  *
- * `watchFile` interroge la date du fichier plutôt que de s'abonner au système :
- * c'est moins élégant mais ça marche sur un fichier réécrit en entier par un
- * autre processus, là où `fs.watch` rate des événements ou tient un handle.
- *
- * Le rappel ne part que si le véhicule a VRAIMENT changé : le jeu réécrit
- * `global.blk` pour des dizaines de raisons, et réveiller l'interface à chaque
- * fois lui ferait relancer des recherches pour rien.
+ * Une seule boucle interroge le serveur ; le profil n'est relu que lorsque le
+ * serveur reste muet au-delà du délai de grâce, ou pour les entrées par nation.
+ * Le rappel ne part que si le véhicule a VRAIMENT changé.
  */
 export function watchSelection(
   onChange: (s: VehicleSelection) => void,
-  // Mesuré : `watchFile` voit une écriture au bout d'environ un intervalle —
-  // 900 ms à 1000, 281 ms à 400, 78 ms à 200. À 250 le changement de véhicule
-  // paraît immédiat, et le coût reste un `stat` quatre fois par seconde : le
-  // fichier n'est relu que lorsqu'il a bougé.
-  intervalMs = 250
+  intervalMs = 1000
 ): () => void {
   let stopped = false;
   let dernier: string | null = null;
-  let file: string | null = null;
+  let nations: Record<string, string> = {};
+  let vuVivantA = 0;
 
-  const relire = async () => {
-    const s = await readSelection();
-    if (stopped || s.current === dernier) return;
-    dernier = s.current;
-    onChange(s);
+  const tour = async () => {
+    if (stopped) return;
+
+    const vivant = await readFromGame();
+    if (stopped) return;
+
+    let courant: string | null;
+    if (vivant) {
+      vuVivantA = Date.now();
+      courant = vivant;
+    } else if (Date.now() - vuVivantA < GRACE_MS) {
+      // Trou de transition : on garde ce qu'on affichait.
+      return;
+    } else {
+      const profil = await readFromProfile();
+      if (stopped) return;
+      courant = profil.current;
+      nations = profil.byNation;
+    }
+
+    if (courant === dernier) return;
+    dernier = courant;
+    // Les nations manquent tant qu'on n'a lu que le serveur : une lecture du
+    // profil au moment du changement suffit, elle coûte une milliseconde.
+    if (Object.keys(nations).length === 0) nations = (await readFromProfile()).byNation;
+    if (stopped) return;
+    onChange({ current: courant, byNation: nations });
   };
 
-  void (async () => {
-    file = await globalBlkPath();
-    if (!file || stopped) return;
-    dernier = (await readSelection()).current;
-    if (stopped) return;
-    watchFile(file, { interval: intervalMs }, () => void relire());
-  })();
+  const timer = setInterval(() => void tour(), intervalMs);
+  void tour();
 
   return () => {
     stopped = true;
-    if (file) unwatchFile(file);
+    clearInterval(timer);
   };
 }

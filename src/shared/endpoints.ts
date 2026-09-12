@@ -34,6 +34,15 @@ export interface Endpoints {
   /** Hôtes reconnus comme appartenant à Live, pour les liens entrants. */
   siteHosts: string[];
   vehicleFont: string;
+  /**
+   * Serveur HTTP que le jeu ouvre sur la machine locale.
+   *
+   * Gaijin le fournit pour les outils tiers (cartes, télémétrie). Il donne
+   * le véhicule courant à l'instant près, hangar compris, là où le fichier
+   * de profil ne s'écrit qu'épisodiquement. Rien n'y est envoyé : une
+   * requête GET, et jamais un contact avec le processus du jeu.
+   */
+  gameApi: string;
   /** Gabarits de pages publiques. `{value}` est remplacé, jamais concaténé. */
   pages: {
     post: string;
@@ -75,6 +84,7 @@ export const DEFAULT_ENDPOINTS: Endpoints = {
   downloadHosts: ["live.warthunder.com", "cdn-live.warthunder.com"],
   siteHosts: ["live.warthunder.com", "www.live.warthunder.com"],
   vehicleFont: "/fonts/symbols_skyquake_short.woff2",
+  gameApi: "http://127.0.0.1:8111",
   pages: {
     post: "https://live.warthunder.com/post/{id}/",
     user: "https://live.warthunder.com/user/{name}/",
@@ -165,6 +175,13 @@ export function mergeEndpoints(override: unknown, base: Endpoints = DEFAULT_ENDP
   }
 
   if (isPath(o.vehicleFont)) out.vehicleFont = o.vehicleFont;
+
+  // Le serveur du jeu est local par nature : on n'accepte qu'une boucle
+  // locale, sinon le manifeste deviendrait un moyen de faire interroger
+  // une machine tierce depuis le poste du joueur.
+  if (typeof o.gameApi === "string" && /^http:\/\/(127\.0\.0\.1|localhost)(:\d{1,5})?$/.test(o.gameApi)) {
+    out.gameApi = o.gameApi;
+  }
 
   for (const key of ["post", "user", "tag"] as const) {
     if (isHttpsUrl(o.pages?.[key])) out.pages[key] = o.pages[key];

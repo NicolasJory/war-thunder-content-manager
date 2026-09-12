@@ -15,9 +15,12 @@
  */
 
 import assert from "assert";
+import { createServer, type Server } from "http";
 import { readFileSync } from "fs";
-import { parseSelection } from "../src/main/currentVehicle.js";
+import { parseSelection, readFromGame, readSelection } from "../src/main/currentVehicle.js";
 import { resolveProfileDir } from "../src/main/wtProfile.js";
+import { setEndpoints } from "../src/main/wtLive.js";
+import { DEFAULT_ENDPOINTS } from "../src/shared/endpoints.js";
 import path from "path";
 
 let passed = 0;
@@ -109,6 +112,86 @@ const BLK = [
   );
   assert.deepEqual(s.byNation, { usa: "us_pt6" });
   ok("seules les valeurs de type texte sont retenues");
+}
+
+// ------------------------- Le serveur du jeu ------------------------- //
+//
+// C'est la source qui compte : le fichier de profil ne s'ecrit
+// qu'episodiquement — mesure sur huit minutes de jeu, il n'a pas bouge une
+// seule fois pendant que le joueur changeait trois fois de vehicule.
+
+console.log("\nLe serveur local du jeu");
+
+/** Faux serveur du jeu : repond ce qu'on lui dit, et compte ses visites. */
+function fauxJeu(reponse: () => unknown | null) {
+  let visites = 0;
+  const server: Server = createServer((_req, res) => {
+    visites++;
+    const r = reponse();
+    if (r === null) {
+      res.destroy();
+      return;
+    }
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify(r));
+  });
+  return {
+    visites: () => visites,
+    listen: () =>
+      new Promise<number>((r) =>
+        server.listen(0, "127.0.0.1", () => r((server.address() as { port: number }).port))
+      ),
+    close: () => new Promise<void>((r) => server.close(() => r())),
+  };
+}
+
+const viser = (port: number) =>
+  setEndpoints({ ...DEFAULT_ENDPOINTS, gameApi: `http://127.0.0.1:${port}` });
+
+{
+  // La forme reelle relevee sur le jeu.
+  let reponse: unknown | null = { valid: true, army: "air", type: "su-9", speed: 0.004 };
+  const jeu = fauxJeu(() => reponse);
+  const port = await jeu.listen();
+  viser(port);
+
+  assert.equal(await readFromGame(), "su-9");
+  ok("le vehicule courant se lit sur /indicators");
+
+  // Entre deux ecrans : le jeu tourne mais n'est dans aucun vehicule.
+  reponse = { valid: false };
+  assert.equal(await readFromGame(), null);
+  ok("`valid: false` ne fabrique pas de vehicule");
+
+  // Reponse deformee : ne jamais faire confiance a la forme.
+  for (const mauvais of [{ valid: true }, { valid: true, type: 42 }, { valid: true, type: "" }, {}]) {
+    reponse = mauvais;
+    assert.equal(await readFromGame(), null, JSON.stringify(mauvais));
+  }
+  ok("reponse deformee : null, jamais une valeur inventee");
+
+  // Le serveur du jeu l'emporte sur le fichier, qui est en retard par nature.
+  reponse = { valid: true, type: "yak-15" };
+  const combine = await readSelection();
+  assert.equal(combine.current, "yak-15", "le serveur doit primer sur le profil");
+  ok("serveur joignable : sa valeur prime sur celle du profil");
+
+  // Connexion coupee : on ne leve pas, on rend null et le profil reprend.
+  reponse = null;
+  assert.equal(await readFromGame(), null);
+  const replis = await readSelection();
+  assert.notEqual(replis.current, "yak-15", "le profil doit reprendre la main");
+  ok("serveur injoignable : repli sur le profil, aucune exception");
+
+  await jeu.close();
+}
+
+{
+  // Jeu ferme : rien n'ecoute sur ce port.
+  viser(59999);
+  assert.equal(await readFromGame(), null);
+  ok("jeu ferme : aucune exception, aucune attente interminable");
+  setEndpoints(DEFAULT_ENDPOINTS);
 }
 
 // ------------------------- Sur le vrai fichier ------------------------- //
