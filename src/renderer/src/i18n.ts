@@ -42,16 +42,19 @@ const en = {
   overlayNoVehicle: "No vehicle detected",
   overlayNoVehicleHelp:
     "Launch War Thunder and pick a vehicle: this panel follows what you have on screen.",
-  overlayOpen: "Floating panel (Alt+X)",
+  overlayOpen: "Floating panel ({key})",
   shortcutLabel: "Panel shortcut",
   shortcutPress: "Press a combination…",
   shortcutNone: "None",
   shortcutHelp:
     "Click, then press the keys you want. It is registered system-wide, so pick something the game does not use.",
+  shortcutNeedsModifier:
+    "Add Ctrl, Alt or Shift. A key on its own would be taken from the game every time you press it.",
+  shortcutReserved: "That key drives this field. Pick another one.",
   shortcutRefused:
     "The system refused that combination, most likely another application holds it. The previous one is still active.",
   trayOpen: "Open the manager",
-  trayPanel: "Show the panel",
+  trayPanel: "Show the panel ({key})",
   trayQuit: "Quit",
   closeToTrayHint:
     "Closing this window keeps the app in the notification area, so the panel shortcut still works while you play. Quit from there.",
@@ -332,16 +335,19 @@ const fr: Record<Key, string> = {
   overlayNoVehicle: "Aucun véhicule détecté",
   overlayNoVehicleHelp:
     "Lance War Thunder et choisis un véhicule : ce panneau suit ce que tu as à l'écran.",
-  overlayOpen: "Panneau flottant (Alt+X)",
+  overlayOpen: "Panneau flottant ({key})",
   shortcutLabel: "Raccourci du panneau",
   shortcutPress: "Appuie sur une combinaison…",
   shortcutNone: "Aucun",
   shortcutHelp:
     "Clique, puis appuie sur les touches voulues. Il est enregistré pour tout le système : choisis une combinaison que le jeu n'utilise pas.",
+  shortcutNeedsModifier:
+    "Ajoute Ctrl, Alt ou Maj. Une touche seule serait prise au jeu à chaque fois que tu l'utilises.",
+  shortcutReserved: "Cette touche pilote ce champ. Choisis-en une autre.",
   shortcutRefused:
     "Le système a refusé cette combinaison, sans doute déjà prise par une autre application. L'ancienne reste active.",
   trayOpen: "Ouvrir le gestionnaire",
-  trayPanel: "Afficher le panneau",
+  trayPanel: "Afficher le panneau ({key})",
   trayQuit: "Quitter",
   closeToTrayHint:
     "Fermer cette fenêtre range l'application dans la zone de notification : le raccourci du panneau continue de marcher pendant que tu joues. C'est de là qu'on quitte.",
@@ -618,16 +624,19 @@ const ru: Record<Key, string> = {
   overlayNoVehicle: "Техника не определена",
   overlayNoVehicleHelp:
     "Запустите War Thunder и выберите технику: панель следует за тем, что у вас на экране.",
-  overlayOpen: "Плавающая панель (Alt+X)",
+  overlayOpen: "Плавающая панель ({key})",
   shortcutLabel: "Сочетание для панели",
   shortcutPress: "Нажмите сочетание…",
   shortcutNone: "Нет",
   shortcutHelp:
     "Нажмите кнопку, затем нужные клавиши. Сочетание регистрируется на уровне системы — выберите то, что не занято игрой.",
+  shortcutNeedsModifier:
+    "Добавьте Ctrl, Alt или Shift. Одиночная клавиша отбиралась бы у игры при каждом нажатии.",
+  shortcutReserved: "Эта клавиша управляет самим полем. Выберите другую.",
   shortcutRefused:
     "Система отклонила это сочетание, скорее всего его уже занимает другое приложение. Прежнее осталось в силе.",
   trayOpen: "Открыть менеджер",
-  trayPanel: "Показать панель",
+  trayPanel: "Показать панель ({key})",
   trayQuit: "Выход",
   closeToTrayHint:
     "Закрытие окна сворачивает приложение в область уведомлений: сочетание для панели продолжает работать во время игры. Выход — оттуда.",
@@ -900,14 +909,16 @@ const zh: Record<Key, string> = {
   inGameShow: "查看它的涂装",
   overlayNoVehicle: "未检测到载具",
   overlayNoVehicleHelp: "启动《战争雷霆》并选择载具：此面板会跟随你屏幕上的选择。",
-  overlayOpen: "浮动面板 (Alt+X)",
+  overlayOpen: "浮动面板 ({key})",
   shortcutLabel: "面板快捷键",
   shortcutPress: "请按下组合键…",
   shortcutNone: "无",
   shortcutHelp: "点击后按下所需按键。快捷键在系统级注册，请选择游戏未占用的组合。",
+  shortcutNeedsModifier: "请加上 Ctrl、Alt 或 Shift。单独一个按键每次按下都会被从游戏中夺走。",
+  shortcutReserved: "该按键用于操作此输入框，请另选一个。",
   shortcutRefused: "系统拒绝了该组合，很可能已被其他应用占用。原有快捷键仍然有效。",
   trayOpen: "打开管理器",
-  trayPanel: "显示面板",
+  trayPanel: "显示面板 ({key})",
   trayQuit: "退出",
   closeToTrayHint: "关闭此窗口会将应用收进通知区域：游戏时面板快捷键仍然可用。退出请从那里操作。",
   gameFolder: "游戏文件夹",

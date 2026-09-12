@@ -13,14 +13,28 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import { useShell } from "./shell";
+import type { Key } from "./i18n";
 
 /** Touches qui ne valent rien seules : un raccourci global en a besoin d'une autre. */
 const MODIFICATEURS = new Set(["Control", "Alt", "Shift", "Meta", "AltGraph"]);
 
 /**
+ * Ce qu'une frappe produit.
+ *
+ * Trois issues, et les distinguer compte : un modificateur enfoncé seul veut
+ * dire « je n'ai pas fini », un refus veut dire « recommence autrement ». Les
+ * confondre laissait le champ muet, et ne rien afficher se lit comme une panne.
+ */
+export type Frappe =
+  | { combo: string }
+  /** Modificateur seul : la combinaison n'est pas terminée, on attend. */
+  | { attente: true }
+  | { refus: "modificateur" | "reservee" };
+
+/**
  * Traduit un événement clavier en combinaison Electron.
  *
- * Rend `null` tant que seule une touche morte est enfoncée — appuyer sur Alt
+ * Rend `attente` tant que seule une touche morte est enfoncée — appuyer sur Alt
  * ne doit pas valider « Alt » comme raccourci.
  */
 export function comboFromEvent(e: {
@@ -30,8 +44,14 @@ export function comboFromEvent(e: {
   altKey: boolean;
   shiftKey: boolean;
   metaKey: boolean;
-}): string | null {
-  if (MODIFICATEURS.has(e.key)) return null;
+}): Frappe {
+  if (MODIFICATEURS.has(e.key)) return { attente: true };
+
+  // Ces touches pilotent le champ lui-même : les capturer empêcherait d'annuler
+  // ou de naviguer au clavier.
+  if (e.code === "Escape" || e.code === "Tab" || e.code === "Backspace") {
+    return { refus: "reservee" };
+  }
 
   const parts: string[] = [];
   if (e.ctrlKey) parts.push("Control");
@@ -42,28 +62,27 @@ export function comboFromEvent(e: {
   // `code` plutôt que `key` : sur un clavier AZERTY, Alt+A rend `key` = "q".
   // Electron attend le nom physique de la touche.
   let touche = e.code;
+  const fonction = /^F\d{1,2}$/.test(touche);
   if (touche.startsWith("Key")) touche = touche.slice(3);
   else if (touche.startsWith("Digit")) touche = touche.slice(5);
   else if (touche.startsWith("Numpad")) touche = `num${touche.slice(6).toLowerCase()}`;
   else if (touche.startsWith("Arrow")) touche = touche.slice(5);
-  else if (/^F\d{1,2}$/.test(touche)) {
-    /* F1..F24 passent tels quels */
-  } else if (touche === "Space") touche = "Space";
-  else if (touche === "Escape" || touche === "Tab" || touche === "Backspace") return null;
-  else touche = touche.replace(/^(Key|Digit)/, "");
 
-  if (!touche) return null;
+  if (!touche) return { refus: "reservee" };
+
   // Une touche seule est acceptée par Electron mais volerait la frappe au jeu.
-  if (parts.length === 0 && !/^F\d{1,2}$/.test(touche)) return null;
+  // Les touches de fonction ne servent à rien d'autre : elles passent seules.
+  if (parts.length === 0 && !fonction) return { refus: "modificateur" };
 
   parts.push(touche);
-  return parts.join("+");
+  return { combo: parts.join("+") };
 }
 
 export function ShortcutField({ value, onSaved }: { value: string; onSaved: (v: string) => void }) {
   const { t } = useShell();
   const [enregistre, setEnregistre] = useState(false);
-  const [refuse, setRefuse] = useState(false);
+  /** Pourquoi la dernière frappe n'a pas été retenue. "" = rien à signaler. */
+  const [refus, setRefus] = useState("");
   const btn = useRef<HTMLButtonElement>(null);
 
   const arreter = useCallback(() => setEnregistre(false), []);
@@ -77,13 +96,18 @@ export function ShortcutField({ value, onSaved }: { value: string; onSaved: (v: 
         arreter();
         return;
       }
-      const combo = comboFromEvent(e);
-      if (!combo) return;
+      const frappe = comboFromEvent(e);
+      // Modificateur seul : l'utilisateur compose encore, on ne dit rien.
+      if ("attente" in frappe) return;
+      if ("refus" in frappe) {
+        setRefus(frappe.refus === "reservee" ? "shortcutReserved" : "shortcutNeedsModifier");
+        return;
+      }
 
       setEnregistre(false);
-      const accepte = await api.overlay.setShortcut(combo);
-      setRefuse(!accepte);
-      if (accepte) onSaved(combo);
+      const accepte = await api.overlay.setShortcut(frappe.combo);
+      setRefus(accepte ? "" : "shortcutRefused");
+      if (accepte) onSaved(frappe.combo);
     };
 
     window.addEventListener("keydown", onKey, true);
@@ -97,14 +121,14 @@ export function ShortcutField({ value, onSaved }: { value: string; onSaved: (v: 
         ref={btn}
         className={enregistre ? "btn primary shortcut-btn" : "btn shortcut-btn"}
         onClick={() => {
-          setRefuse(false);
+          setRefus("");
           setEnregistre((v) => !v);
         }}
       >
         {enregistre ? t("shortcutPress") : value || t("shortcutNone")}
       </button>
       <p className="hint">{t("shortcutHelp")}</p>
-      {refuse && <p className="error">{t("shortcutRefused")}</p>}
+      {refus && <p className="error">{t(refus as Key)}</p>}
     </div>
   );
 }

@@ -130,8 +130,12 @@ if (!dir) {
   if (texte) {
     const s = parseSelection(texte);
     assert(s.current, "un profil réel doit porter un véhicule courant");
+    // Forme volontairement large : les identifiants du jeu portent chiffres,
+    // tirets et points (`mig-9_ussr`, `masterbank.strings`). C'est la présence
+    // dans la taxonomie, vérifiée plus bas, qui fait foi — une forme devinée
+    // ne ferait que rejeter des identifiants parfaitement valides.
     assert(
-      /^[a-z]{2,}_[\w]+$/i.test(s.current),
+      /^[\w.-]+$/.test(s.current),
       `identifiant inattendu : ${s.current}`
     );
     ok(`fichier réel de ${Math.round(texte.length / 1024)} Ko : ${s.current}`);

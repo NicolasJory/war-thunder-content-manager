@@ -30,7 +30,7 @@ type Frappe = {
   metaKey?: boolean;
 };
 
-const combo = (f: Frappe) =>
+const lire = (f: Frappe) =>
   comboFromEvent({
     key: f.key,
     code: f.code,
@@ -39,6 +39,19 @@ const combo = (f: Frappe) =>
     shiftKey: !!f.shiftKey,
     metaKey: !!f.metaKey,
   });
+
+/** La combinaison retenue, ou null si la frappe n'a pas abouti. */
+const combo = (f: Frappe) => {
+  const r = lire(f);
+  return "combo" in r ? r.combo : null;
+};
+
+/** Pourquoi la frappe a été écartée : "attente" ou le motif du refus. */
+const motif = (f: Frappe) => {
+  const r = lire(f);
+  if ("combo" in r) return "accepte";
+  return "attente" in r ? "attente" : r.refus;
+};
 
 // Le cas nominal, celui du défaut.
 assert.equal(combo({ key: "x", code: "KeyX", altKey: true }), "Alt+X");
@@ -69,21 +82,34 @@ assert.equal(combo({ key: "F9", code: "F9" }), "F9");
 assert.equal(combo({ key: "F9", code: "F9", shiftKey: true }), "Shift+F9");
 ok("les touches de fonction valent seules");
 
-// Une lettre seule volerait la frappe au jeu : refusée.
-assert.equal(combo({ key: "a", code: "KeyA" }), null);
-assert.equal(combo({ key: "1", code: "Digit1" }), null);
-ok("touche seule sans modificateur : refusée");
+// Une lettre seule volerait la frappe au jeu : refusée, et on dit pourquoi.
+assert.equal(motif({ key: "a", code: "KeyA" }), "modificateur");
+assert.equal(motif({ key: "1", code: "Digit1" }), "modificateur");
+ok("touche seule sans modificateur : refusée avec son motif");
 
-// Un modificateur enfoncé seul n'est pas un raccourci.
+// Un modificateur enfoncé seul veut dire « je n'ai pas fini », pas « refusé » :
+// afficher une erreur pendant qu'on compose serait insupportable.
 for (const k of ["Control", "Alt", "Shift", "Meta", "AltGraph"]) {
-  assert.equal(combo({ key: k, code: `${k}Left`, altKey: true }), null, k);
+  assert.equal(motif({ key: k, code: `${k}Left`, altKey: true }), "attente", k);
 }
-ok("un modificateur seul ne valide rien");
+ok("modificateur seul : attente, pas refus — on compose encore");
 
-// Les touches qui servent à annuler ou naviguer restent au formulaire.
-assert.equal(combo({ key: "Escape", code: "Escape", altKey: true }), null);
-assert.equal(combo({ key: "Tab", code: "Tab", ctrlKey: true }), null);
-assert.equal(combo({ key: "Backspace", code: "Backspace", altKey: true }), null);
-ok("Échap, Tab et Retour arrière ne s'enregistrent pas");
+// Les touches qui pilotent le champ lui-même.
+assert.equal(motif({ key: "Escape", code: "Escape", altKey: true }), "reservee");
+assert.equal(motif({ key: "Tab", code: "Tab", ctrlKey: true }), "reservee");
+assert.equal(motif({ key: "Backspace", code: "Backspace", altKey: true }), "reservee");
+ok("Échap, Tab et Retour arrière : refusées comme réservées");
+
+// Le point qui a valu ce correctif : une frappe écartée doit TOUJOURS porter
+// un motif. Rester muet se lit comme une panne — c'est ce qui s'est passé.
+for (const f of [
+  { key: "a", code: "KeyA" },
+  { key: "Tab", code: "Tab", ctrlKey: true },
+  { key: "Escape", code: "Escape" },
+] as Frappe[]) {
+  assert.notEqual(motif(f), "accepte");
+  assert.notEqual(motif(f), "attente", "une frappe finie ne doit pas rester muette");
+}
+ok("toute frappe écartée porte un motif affichable");
 
 console.log(`\n${passed} checks OK — saisie d'un raccourci\n`);

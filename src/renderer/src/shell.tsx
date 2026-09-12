@@ -173,16 +173,6 @@ export function ShellProvider({
   // téléchargement puis de l'extraction.
   useEffect(() => api.content.onProgress(setProgress), []);
 
-  /*
-   * Le menu de la zone de notification est construit par le main, qui n'a pas
-   * les traductions. On les lui envoie, et on recommence quand la langue
-   * change — sinon le menu resterait figé dans celle du démarrage.
-   */
-  useEffect(() => {
-    void api
-      .setTrayLabels({ open: t("trayOpen"), panel: t("trayPanel"), quit: t("trayQuit") })
-      .catch(() => undefined);
-  }, [t]);
 
   /*
    * Manifeste des adresses, réclamé au main au démarrage.

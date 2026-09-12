@@ -123,7 +123,22 @@ function Shell({
   useEffect(() => {
     api.takeLink().then((link) => link && openLink(link));
     return api.onDeepLink((link) => openLink(link));
-  }, [openLink]);
+  }, [openLink]);
+  /*
+   * Le menu de la zone de notification est construit par le main, qui n'a ni
+   * les traductions ni la configuration. On les lui envoie, et on recommence
+   * quand la langue OU le raccourci change — sinon le menu annoncerait encore
+   * l'ancienne combinaison.
+   */
+  useEffect(() => {
+    void api
+      .setTrayLabels({
+        open: t("trayOpen"),
+        panel: t("trayPanel", { key: config.overlayShortcut }),
+        quit: t("trayQuit"),
+      })
+      .catch(() => undefined);
+  }, [t, config.overlayShortcut]);
 
   const goTo = useCallback(
     (next: () => void) => {
@@ -282,7 +297,7 @@ function Shell({
               application : le panneau reste atteignable à la souris. */}
           <button className="btn full overlay-open" onClick={() => api.overlay.toggle()}>
             <IconSight size={13} />
-            {t("overlayOpen")}
+            {t("overlayOpen", { key: config.overlayShortcut })}
           </button>
           <span className="rail-label">{t("gameFolder")}</span>
           <span className="rail-path" title={config.gameDir}>
