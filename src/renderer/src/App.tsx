@@ -3,7 +3,15 @@ import { api, type ContentType, type DeepLink, type FavoriteAuthor, type Install
 import { AuthorView } from "./AuthorView";
 import { Browse } from "./Browse";
 import { Detail } from "./Detail";
-import { IconDownload, IconFolder, IconInfo, IconSearch, IconSight, IconSound } from "./icons";
+import {
+  IconAudioSettings,
+  IconDownload,
+  IconFolder,
+  IconInfo,
+  IconSearch,
+  IconSight,
+  IconSound,
+} from "./icons";
 import { parseDeepLink } from "../../shared/deepLink";
 import { Favorites } from "./Favorites";
 import { Installed } from "./Installed";
@@ -225,6 +233,24 @@ function Shell({
             {t("navSights")}
           </button>
           <button
+            className={
+              tab === "browse" && content === "sound" && !author ? "nav-item active" : "nav-item"
+            }
+            onClick={() => switchContent("sound")}
+          >
+            <IconSound size={16} />
+            {t("navSounds")}
+          </button>
+          {/* Les réglages audio ne sont pas du contenu à parcourir : ils disent
+              quel mod déjà téléchargé occupe quelle place dans le jeu. */}
+          <button
+            className={tab === "audio" && !author ? "nav-item active" : "nav-item"}
+            onClick={() => go("audio")}
+          >
+            <IconAudioSettings size={16} />
+            {t("tabAudioSettings")}
+          </button>
+          <button
             className={tab === "installed" ? "nav-item active" : "nav-item"}
             onClick={() => go("installed")}
           >
@@ -241,24 +267,6 @@ function Shell({
             <IconInfo size={16} />
             {t("favorites")}
             <span className="nav-count">{config.favorites.length}</span>
-          </button>
-          <button
-            className={
-              tab === "browse" && content === "sound" && !author ? "nav-item active" : "nav-item"
-            }
-            onClick={() => switchContent("sound")}
-          >
-            <IconSound size={16} />
-            {t("navSounds")}
-          </button>
-          {/* Les réglages audio ne sont pas du contenu à parcourir : ils disent
-              quel mod déjà téléchargé occupe quelle place dans le jeu. */}
-          <button
-            className={tab === "audio" && !author ? "nav-item active" : "nav-item"}
-            onClick={() => go("audio")}
-          >
-            <IconSound size={16} />
-            {t("tabAudioSettings")}
           </button>
         </nav>
 

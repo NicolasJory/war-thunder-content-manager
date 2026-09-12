@@ -51,10 +51,37 @@ export const IconSight = (p: Props) => (
   </Icon>
 );
 
+/**
+ * Haut-parleur. Le tracé précédent n'était pas centré — son corps allait de
+ * y=120 à 184 mais le cône descendait à 224, si bien qu'à 16 px l'icône
+ * paraissait tomber hors de son bouton et ne se lisait plus.
+ *
+ * Ici tout est symétrique autour de y=128 : le corps occupe 96→160, le cône
+ * s'ouvre de 48 à 208, et les deux ondes sont des arcs concentriques.
+ */
 export const IconSound = (p: Props) => (
   <Icon {...p}>
-    <path d="M104 184H48a8 8 0 01-8-8v-48a8 8 0 018-8h56l48-40v144z" strokeLinejoin="round" />
-    <path d="M192 96a40 40 0 010 64" strokeLinecap="round" />
+    <path d="M92 96L144 48v160l-52-48H48V96z" strokeLinejoin="round" />
+    <path d="M176 100a34 34 0 010 56M204 78a60 60 0 010 100" strokeLinecap="round" />
+  </Icon>
+);
+
+/**
+ * Réglages audio : un haut-parleur et trois curseurs.
+ *
+ * Un engrenage avec un haut-parleur en médaillon avait été essayé d'abord :
+ * propre en grand, illisible à 16 px, où le haut-parleur se réduit à un point.
+ * Deux symboles ne tiennent pas dans seize pixels, c'est une limite du format.
+ *
+ * Les curseurs disent « réglages » aussi bien qu'une roue dentée, et mieux
+ * encore ce que fait la page : attribuer chaque emplacement à un mod. Chacun
+ * des deux symboles garde la place de se lire.
+ */
+export const IconAudioSettings = (p: Props) => (
+  <Icon width={16} {...p}>
+    <path d="M84 100L128 60v136l-44-40H48v-56z" strokeLinejoin="round" />
+    <path d="M168 72h56M168 128h20M168 184h56" strokeLinecap="round" />
+    <circle cx="212" cy="128" r="16" />
   </Icon>
 );
 
