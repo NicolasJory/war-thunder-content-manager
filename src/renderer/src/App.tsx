@@ -188,10 +188,17 @@ function Shell({
     });
   };
 
-  /** Changer de type remet la recherche à zéro : un hashtag de camouflage
-   *  n'a pas de sens sur les viseurs, et les filtres véhicule non plus. */
+  /**
+   * Changer de type remet la recherche à zéro : un hashtag de camouflage n'a
+   * pas de sens sur les viseurs, et les filtres véhicule non plus.
+   *
+   * Le raccourci ne vaut que si cette vue est DÉJÀ celle affichée. Comparer le
+   * seul type bloquait le retour : partir d'Audio, passer aux Paramètres audio,
+   * recliquer Audio ne faisait rien, le type n'ayant pas changé. Même blocage
+   * entre Camouflages et Installés, ou Viseurs et Favoris.
+   */
   const switchContent = (next: ContentType) => {
-    if (next === content) return;
+    if (next === content && tab === "browse" && !author) return;
     goTo(() => {
       setOpenSkin(null);
       setAuthor(null);
