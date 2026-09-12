@@ -263,15 +263,6 @@ function Shell({
             <IconSound size={16} />
             {t("navSounds")}
           </button>
-          {/* Les réglages audio ne sont pas du contenu à parcourir : ils disent
-              quel mod déjà téléchargé occupe quelle place dans le jeu. */}
-          <button
-            className={tab === "audio" && !author ? "nav-item active" : "nav-item"}
-            onClick={() => go("audio")}
-          >
-            <IconGear size={16} />
-            {t("tabSettings")}
-          </button>
           <button
             className={tab === "installed" ? "nav-item active" : "nav-item"}
             onClick={() => go("installed")}
@@ -289,6 +280,19 @@ function Shell({
             <IconInfo size={16} />
             {t("favorites")}
             <span className="nav-count">{config.favorites.length}</span>
+          </button>
+        </nav>
+
+        {/* Les réglages ne sont pas du contenu à parcourir : ils quittent la
+            liste de navigation pour se coller au bas du rail, au-dessus du
+            dossier du jeu et du choix de langue, qui relèvent du même registre. */}
+        <nav className="nav nav-bottom">
+          <button
+            className={tab === "audio" && !author ? "nav-item active" : "nav-item"}
+            onClick={() => go("audio")}
+          >
+            <IconGear size={16} />
+            {t("tabSettings")}
           </button>
         </nav>
 
