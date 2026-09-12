@@ -25,6 +25,7 @@ import {
 } from "./api";
 import { IconClose, IconFolder, IconInfo } from "./icons";
 import { SkinCard } from "./SkinCard";
+import { Mixer } from "./Mixer";
 import { SoundState, useShell } from "./shell";
 
 /** Une bibliotheque se range par date, par nom ou par poids : rien d'autre. */
@@ -290,6 +291,10 @@ export function Installed({
           );
         })
       )}
+
+      {/* Le mixeur suit les groupes : il ne parle que de mods son, et n'a de
+          sens qu'une fois qu'on en a. */}
+      <Mixer records={records} onRecords={onRecords} />
 
       {foreign.length > 0 && (
         <section className="foreign">

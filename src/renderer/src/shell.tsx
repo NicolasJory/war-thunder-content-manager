@@ -245,8 +245,13 @@ export function ShellProvider({
       setBusyId(skin.id);
       setProgress(null);
       try {
-        const rec = await api.content.install(typeOf(skin), skin, folderName, groups);
-        onInstalledChange([...installed.filter((r) => r.lang_group !== rec.lang_group), rec]);
+        // Le main rend la liste entière : poser un mod change aussi ce que
+        // revendiquent ceux qu'il recouvre, et refabriquer la liste ici depuis
+        // une copie périmée perdait ce changement.
+        const next = await api.content.install(typeOf(skin), skin, folderName, groups);
+        onInstalledChange(next);
+        const rec = next.find((r) => r.lang_group === skin.lang_group);
+        if (!rec) return;
         notify(t("installedToast", { name: rec.name }));
         // Un dossier de véhicule sight, une banque son : les deux sont partagés
         // entre paquets, et celui-ci vient d'en écraser un autre sur disque.
@@ -306,12 +311,10 @@ export function ShellProvider({
     async (record: InstalledRecord, active: boolean) => {
       setBusyGroup(record.lang_group);
       try {
-        const next = await api.content.setActive(record, active);
-        onInstalledChange(
-          installed.map((r) => (r.lang_group === next.lang_group ? next : r))
-        );
-        const name = next.name;
-        notify(t(active ? "activatedToast" : "deactivatedToast", { name }));
+        const list = await api.content.setActive(record, active);
+        onInstalledChange(list);
+        const next = list.find((r) => r.lang_group === record.lang_group) ?? record;
+        notify(t(active ? "activatedToast" : "deactivatedToast", { name: next.name }));
         const overwrites = soundMeta(next)?.overwrites ?? [];
         if (active && overwrites.length > 0) {
           notify(t("soundOverwriteToast", { names: overwrites.join(", ") }));

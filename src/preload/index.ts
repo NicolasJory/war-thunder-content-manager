@@ -43,6 +43,9 @@ const api = {
     foreign: () => ipcRenderer.invoke("content:foreign"),
     /** Banques de `sound/mod` que l'application n'a pas posées. */
     foreignBanks: () => ipcRenderer.invoke("content:foreignBanks"),
+    /** Emplacements sonores : qui occupe quoi, qui pourrait. */
+    slots: () => ipcRenderer.invoke("content:slots"),
+    setSlot: (slot: string, to: number | null) => ipcRenderer.invoke("content:setSlot", slot, to),
 
     // On n'expose pas ipcRenderer : juste un abonnement à CE canal, avec sa
     // fonction de désabonnement. Le renderer ne peut pas écouter autre chose.

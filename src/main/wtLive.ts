@@ -25,6 +25,7 @@ import path from "path";
 import { ERR, fail } from "../shared/errors.js";
 import { DEFAULT_ENDPOINTS, type Endpoints } from "../shared/endpoints.js";
 import { planSightLayout } from "./sightLayout.js";
+import { isRisky, slotOf } from "./soundSlots.js";
 import {
   defaultSelection,
   isValidSelection,
@@ -1135,6 +1136,17 @@ export interface SoundMeta {
   overwrites: string[];
   /** Chemin de l'archive conservée. */
   zip: string;
+  /**
+   * Toutes les banques que ce mod PEUT poser, selon les dossiers retenus.
+   *
+   * `files` dit ce qu'il occupe à l'instant, `provides` ce qu'il sait occuper.
+   * Les deux coïncidaient tant qu'un mod était tout ou rien ; le mixeur les
+   * sépare, puisqu'un mod peut n'occuper que trois de ses dix emplacements.
+   *
+   * Absent des enregistrements d'avant le mixeur : `soundProvides` le
+   * reconstruit alors depuis l'archive, une fois, et le récrit.
+   */
+  provides?: string[];
 }
 
 const soundMeta = (r: InstalledRecord): SoundMeta => r.meta as unknown as SoundMeta;
@@ -1160,6 +1172,39 @@ export async function readStockBanks(config: WtConfig): Promise<string[]> {
     // moins fin. Refuser d'installer pour ça serait disproportionné.
     return [];
   }
+}
+
+/**
+ * Retire à tous les autres mods la revendication des fichiers qu'on vient de
+ * poser, et la donne à `owner`.
+ *
+ * `meta.files` répond à « qu'est-ce que ce mod occupe SUR LE DISQUE », pas
+ * « qu'est-ce qu'il a posé un jour ». Sans ce recalage, installer un mod
+ * par-dessus un autre laissait les deux revendiquer les mêmes noms : les
+ * cartes annonçaient 16 et 17 fichiers pour un dossier qui n'en portait que
+ * 17, et le mixeur ne savait plus dire à qui appartenait une place.
+ *
+ * Ce que le mod recouvert peut encore fournir n'est pas perdu pour autant :
+ * `provides` le dit, et c'est là-dessus que `restoreCovered` s'appuie pour lui
+ * rendre sa banque quand celui du dessus s'en va.
+ */
+export function reassignClaims(
+  installed: InstalledRecord[],
+  owner: number,
+  files: string[]
+): InstalledRecord[] {
+  const taken = new Set(files.map((f) => f.toLowerCase()));
+
+  return installed.map((record) => {
+    if (record.contentType !== "sound" || record.lang_group === owner) return record;
+    const meta = soundMeta(record);
+    const kept = (meta?.files ?? []).filter((f) => !taken.has(f.toLowerCase()));
+    if (kept.length === (meta?.files ?? []).length) return record;
+    return {
+      ...record,
+      meta: { ...meta, files: kept, active: kept.length > 0 } as unknown as Record<string, unknown>,
+    };
+  });
 }
 
 /** Mods son actuellement posés dans le jeu, le plus récemment activé en tête. */
@@ -1240,7 +1285,10 @@ async function restoreCovered(
   for (const other of activeSounds(config, exceptGroup)) {
     if (want.size === 0) break;
     const meta = soundMeta(other);
-    if (!meta.files.some((f) => want.has(f.toLowerCase()))) continue;
+    // Ce qu'il SAIT poser, pas ce qu'il occupe : justement, il ne l'occupe
+    // plus, puisque le mod qu'on retire le lui avait pris.
+    const peut = await soundProvides(other, config);
+    if (!peut.some((f) => want.has(f.toLowerCase()))) continue;
 
     try {
       const zip = new AdmZip(meta.zip);
@@ -1332,6 +1380,196 @@ export async function listForeignBanks(config: WtConfig): Promise<string[]> {
   }
 }
 
+/**
+ * Banques qu'un mod sait poser.
+ *
+ * Lu dans l'enregistrement quand il est là. Sinon reconstruit depuis l'archive
+ * — le cas des mods installés avant le mixeur. On relit alors le zip en entier,
+ * ce qui coûte cher sur 853 Mo, donc l'appelant récrit le résultat pour ne le
+ * payer qu'une fois.
+ */
+export async function soundProvides(record: InstalledRecord, config: WtConfig): Promise<string[]> {
+  const meta = soundMeta(record);
+  if (meta?.provides) return meta.provides;
+  if (!meta?.zip) return [];
+
+  try {
+    const zip = new AdmZip(meta.zip);
+    const plan = planSoundLayout(
+      zip.getEntries().map((e) => e.entryName),
+      await readStockBanks(config)
+    );
+    if (!plan) return [];
+    return soundEntriesFor(plan, meta.groups).map((e) => targetName(plan, e));
+  } catch {
+    // Archive disparue : le mod ne peut plus rien fournir, et le dire ainsi
+    // vaut mieux que de proposer dans le mixeur un choix qui échouerait.
+    return [];
+  }
+}
+
+/**
+ * État d'un emplacement : qui l'occupe, qui pourrait l'occuper.
+ *
+ * `owner` à null avec `foreign` faux signifie que le jeu joue son propre son.
+ * `foreign` vrai veut dire qu'un fichier est là mais que l'application ne l'a
+ * pas posé : elle peut l'écraser, pas le remettre, et le dit.
+ */
+export interface SoundSlot {
+  slot: string;
+  owner: number | null;
+  foreign: boolean;
+  /** `lang_group` des mods téléchargés capables de tenir cette place. */
+  candidates: number[];
+  risky: boolean;
+}
+
+/**
+ * Le tableau du mixeur : un emplacement par ligne.
+ *
+ * Ne liste que les places qu'au moins un mod téléchargé sait occuper, plus
+ * celles qui sont occupées aujourd'hui. Afficher les 139 banques du jeu quand
+ * aucun mod n'en propose que vingt noierait le choix dans du vide.
+ */
+export async function listSoundSlots(config: WtConfig): Promise<SoundSlot[]> {
+  const records = config.installed.filter((r) => r.contentType === "sound");
+  const slots = new Map<string, SoundSlot>();
+
+  const touch = (slot: string): SoundSlot => {
+    let found = slots.get(slot);
+    if (!found) {
+      found = { slot, owner: null, foreign: false, candidates: [], risky: isRisky(slot) };
+      slots.set(slot, found);
+    }
+    return found;
+  };
+
+  for (const record of records) {
+    for (const file of await soundProvides(record, config)) {
+      touch(slotOf(file)).candidates.push(record.lang_group);
+    }
+    // Ce qu'il occupe vraiment, même si `provides` ne le mentionnait plus.
+    for (const file of soundMeta(record)?.files ?? []) {
+      touch(slotOf(file)).owner = record.lang_group;
+    }
+  }
+
+  // Ce qui est sur le disque sans venir de nous occupe une place bien réelle.
+  for (const file of await listForeignBanks(config)) {
+    const found = touch(slotOf(file));
+    if (found.owner === null) found.foreign = true;
+  }
+
+  for (const found of slots.values()) {
+    found.candidates = [...new Set(found.candidates)].sort((a, b) => a - b);
+  }
+  return [...slots.values()].sort((a, b) => a.slot.localeCompare(b.slot));
+}
+
+/**
+ * Donne un emplacement à un mod, ou le rend au jeu.
+ *
+ * C'est l'unique opération du mixeur. Elle retire d'abord ce qui occupe la
+ * place — fichiers ET revendication de l'ancien propriétaire — puis pose ceux
+ * du nouveau. Retirer seulement le `.bank` laisserait l'audio du précédent.
+ *
+ * `to` à null rend la place au son d'origine du jeu : on efface, le jeu relit
+ * sa propre banque dans `sound/`.
+ */
+export async function setSoundSlot(
+  config: WtConfig,
+  slot: string,
+  to: number | null
+): Promise<InstalledRecord[]> {
+  const dest = await soundInstaller.resolveDestination(config);
+  await fs.mkdir(dest, { recursive: true });
+
+  // 1. Libérer la place. Tout ce qui porte ce nom s'en va, quelle qu'en soit
+  //    l'origine — y compris un fichier posé à la main, que l'utilisateur vient
+  //    justement de demander à remplacer.
+  const present = await fs
+    .readdir(dest)
+    .catch(() => [] as string[])
+    .then((names) => names.filter((n) => slotOf(n) === slot));
+  await removeFiles(dest, present);
+
+  const next = config.installed.map((record) => {
+    if (record.contentType !== "sound") return record;
+    const meta = soundMeta(record);
+    const kept = (meta?.files ?? []).filter((f) => slotOf(f) !== slot);
+    if (kept.length === (meta?.files ?? []).length) return record;
+    return { ...record, meta: { ...meta, files: kept, active: kept.length > 0 } as unknown as Record<string, unknown> };
+  });
+
+  if (to === null) {
+    await syncEnableMod({ ...config, installed: next });
+    return next;
+  }
+
+  // 2. Poser celles du nouveau propriétaire.
+  const record = next.find((r) => r.contentType === "sound" && r.lang_group === to);
+  if (!record) fail(ERR.notInstalled, String(to));
+  const meta = soundMeta(record);
+  if (!meta?.zip) fail(ERR.notInstalled, String(to));
+
+  const zip = new AdmZip(meta.zip);
+  const plan = planSoundLayout(
+    zip.getEntries().map((e) => e.entryName),
+    await readStockBanks(config)
+  );
+  if (!plan) fail(ERR.emptyArchive);
+
+  const wanted = soundEntriesFor(plan, meta.groups).filter((e) => slotOf(targetName(plan, e)) === slot);
+  if (wanted.length === 0) fail(ERR.badArgs, slot);
+
+  const laid: string[] = [];
+  for (const entryName of wanted) {
+    const entry = zip.getEntry(entryName);
+    if (!entry) continue;
+    const name = targetName(plan, entryName);
+    await fs.writeFile(ensureInside(dest, path.resolve(dest, name)), entry.getData());
+    laid.push(name);
+  }
+  if (laid.length === 0) fail(ERR.emptyArchive);
+
+  const updated = next.map((r) =>
+    r.contentType === "sound" && r.lang_group === to
+      ? {
+          ...r,
+          meta: {
+            ...soundMeta(r),
+            files: [...(soundMeta(r)?.files ?? []), ...laid],
+            active: true,
+            activatedAt: Date.now(),
+          } as unknown as Record<string, unknown>,
+        }
+      : r
+  );
+
+  await syncEnableMod({ ...config, installed: updated });
+  return updated;
+}
+
+/**
+ * Aligne `enable_mod` sur la réalité : posée tant qu'une banque est là, retirée
+ * quand `sound/mod` se vide. Le mixeur peut vider le dossier emplacement par
+ * emplacement, sans qu'aucune désactivation de mod ne soit passée par là.
+ */
+async function syncEnableMod(config: WtConfig): Promise<void> {
+  const dest = await soundInstaller.resolveDestination(config);
+  const reste = await fs.readdir(dest).catch(() => [] as string[]);
+  if (reste.length > 0) {
+    await setEnableMod(config, true);
+    return;
+  }
+  // On ne retire que ce qu'on avait posé : un `enable_mod` écrit par le joueur
+  // avant l'application ne nous appartient pas.
+  const notre = config.installed.some(
+    (r) => r.contentType === "sound" && soundMeta(r)?.addedEnableMod
+  );
+  if (notre) await setEnableMod(config, false);
+}
+
 export const soundInstaller: Installer = {
   contentType: "sound",
 
@@ -1409,6 +1647,7 @@ export const soundInstaller: Installer = {
       addedEnableMod,
       overwrites: covered.map((r) => r.name),
       zip: zipPath,
+      provides: soundEntriesFor(plan, groups).map((e) => targetName(plan, e)),
     };
 
     return {

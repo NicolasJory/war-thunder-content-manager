@@ -11,10 +11,11 @@ import type {
   SearchParams,
   Skin,
   SortKey,
+  SoundSlot,
 } from "../../main/wtLive.js";
 import type { FavoriteAuthor, ValidationResult, WtConfigFile } from "../../main/config.js";
 
-export type { ContentType, FavoriteAuthor, InstalledRecord, Page, SearchParams, Skin, SortKey, WtConfigFile };
+export type { ContentType, FavoriteAuthor, InstalledRecord, Page, SearchParams, Skin, SortKey, SoundSlot, WtConfigFile };
 export type { DeepLink } from "../../shared/deepLink.js";
 import { DEFAULT_ENDPOINTS, fillTemplate } from "../../shared/endpoints.js";
 
@@ -67,14 +68,16 @@ interface Api {
       skin: Skin,
       folderName?: string,
       groups?: string[]
-    ): Promise<InstalledRecord>;
+    ): Promise<InstalledRecord[]>;
     uninstall(record: InstalledRecord): Promise<void>;
     inspect(skin: Skin): Promise<ArchiveChoice | null>;
-    setActive(record: InstalledRecord, active: boolean): Promise<InstalledRecord>;
+    setActive(record: InstalledRecord, active: boolean): Promise<InstalledRecord[]>;
     cancelInstall(id: number): Promise<boolean>;
     refreshInstalled(): Promise<InstalledRecord[]>;
     foreign(): Promise<ForeignFolder[]>;
     foreignBanks(): Promise<string[]>;
+    slots(): Promise<SoundSlot[]>;
+    setSlot(slot: string, to: number | null): Promise<InstalledRecord[]>;
     onProgress(cb: (p: Progress) => void): () => void;
   };
   vehicleFont(): Promise<string | null>;

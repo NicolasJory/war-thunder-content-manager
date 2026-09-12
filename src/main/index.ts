@@ -45,6 +45,9 @@ import {
   getInstaller,
   listForeign,
   listForeignBanks,
+  listSoundSlots,
+  reassignClaims,
+  setSoundSlot,
   type ContentType,
   type InstalledRecord,
   type InstallProgress,
@@ -386,8 +389,18 @@ function registerIpc() {
         ),
         record,
       ];
-      await store.set({ installed });
-      return record;
+      // Ce qui vient d'être posé appartient à ce mod, et plus à celui qu'il a
+      // recouvert : sans ça, deux mods revendiqueraient les mêmes fichiers.
+      const settled = reassignClaims(
+        installed,
+        record.lang_group,
+        (record.meta?.files as string[] | undefined) ?? []
+      );
+      await store.set({ installed: settled });
+      // La liste ENTIERE, pas le seul enregistrement pose : recouvrir un mod
+      // change aussi le sien, et le renderer qui refabriquait la liste depuis
+      // sa copie perdait ce changement.
+      return settled;
     }
   );
 
@@ -448,12 +461,16 @@ function registerIpc() {
     if (!installer.setActive) fail(ERR.noActivation, owned.contentType);
 
     const next = await installer.setActive(owned, active === true, cfg);
-    await store.set({
-      installed: cfg.installed.map((r) =>
-        r.contentType === next.contentType && r.lang_group === next.lang_group ? next : r
-      ),
-    });
-    return next;
+    const merged = cfg.installed.map((r) =>
+      r.contentType === next.contentType && r.lang_group === next.lang_group ? next : r
+    );
+    const settled = reassignClaims(
+      merged,
+      next.lang_group,
+      (next.meta?.files as string[] | undefined) ?? []
+    );
+    await store.set({ installed: settled });
+    return settled;
   });
 
   /** Coupe une installation en cours. Sans effet si elle est déjà terminée. */
@@ -533,6 +550,26 @@ function registerIpc() {
    * donc rien d'une installation faite à la main.
    */
   ipcMain.handle("content:foreignBanks", async () => listForeignBanks(await requireGameDir()));
+
+  /** Le tableau du mixeur : un emplacement sonore par ligne. */
+  ipcMain.handle("content:slots", async () => listSoundSlots(await requireGameDir()));
+
+  /**
+   * Donne un emplacement à un mod, ou le rend au son d'origine du jeu.
+   *
+   * Le renderer ne désigne QUE la place et le mod : les chemins viennent des
+   * enregistrements stockés, jamais de ce qu'il transmet.
+   */
+  ipcMain.handle("content:setSlot", async (_e, slot: unknown, to: unknown) => {
+    const cfg = await requireGameDir();
+    const installed = await setSoundSlot(
+      cfg,
+      asString(slot, 260),
+      to === null || to === undefined ? null : asIndex(to, Number.MAX_SAFE_INTEGER)
+    );
+    await store.set({ installed });
+    return installed;
+  });
 
   ipcMain.handle("shell:openSkinsFolder", async () => {
     const cfg = await requireGameDir();

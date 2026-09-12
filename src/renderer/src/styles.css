@@ -1913,3 +1913,66 @@ code {
   font-weight: 600;
   color: var(--danger);
 }
+
+/* ------------------------- Mixeur audio ------------------------- */
+
+.mixer {
+  margin-top: 28px;
+}
+.mixer-help {
+  margin: 0 0 14px;
+  font-size: 12px;
+  max-width: 62ch;
+}
+.mixer-group {
+  margin-bottom: 16px;
+}
+.mixer-group-name {
+  margin: 0 0 6px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim-35);
+}
+/* Une ligne = une place. Le nom à gauche, qui l'occupe à droite. */
+.mixer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+.mixer-row:last-child {
+  border-bottom: 0;
+}
+.mixer-slot {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.mixer-pick {
+  width: 240px;
+  flex: none;
+  height: 30px;
+}
+/* Le masterbank : signalé, jamais interdit. */
+.mixer-risky {
+  display: inline-flex;
+  color: var(--danger);
+  cursor: help;
+}
+
+@media (max-width: 760px) {
+  .mixer-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .mixer-pick {
+    width: 100%;
+  }
+}

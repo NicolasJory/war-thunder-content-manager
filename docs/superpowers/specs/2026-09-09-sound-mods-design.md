@@ -225,6 +225,59 @@ sur le contenu, donc mettre à jour un viseur depuis Installés l'aurait posé
 comme un camouflage. Et l'en-tête annonçait « n camouflages · … dans UserSkins »
 pour tous les types confondus.
 
+## Le mixeur : un emplacement, un mod
+
+Ajouté le 12 septembre, à la demande.
+
+Le modèle « un mod entier ou rien » ne sait pas exprimer une demande banale :
+les voix françaises d'un mod et les allemandes d'un autre. Or le jeu lit
+`sound/mod` à plat, un fichier par nom — chaque nom est donc une place, et le
+panachage est la façon naturelle de raisonner dessus.
+
+Sur les 20 archives relevées, **85 emplacements sur 105 sont disputés par au
+moins deux mods**. `_crew_dialogs_ground_de` est fourni par 10 mods différents,
+le français par 9. Le besoin n'est pas théorique.
+
+### Les libellés se composent, ils ne s'écrivent pas
+
+Le vocabulaire du jeu est régulier : `tanks_engines`, `aircraft_engines` et
+`ships_engines` partagent leur seconde moitié, et `_crew_dialogs_ground_fr`
+n'est que `crew_dialogs_ground` plus une langue. On traduit les morceaux.
+
+Écrites en entier dans les quatre langues d'interface, les 4 familles × 31
+langues × 21 emplacements fixes auraient fait plus de 400 chaînes. En morceaux,
+il en reste une trentaine — et les noms de langue ne sont pas écrits du tout :
+`Intl.DisplayNames` rend « allemand », « anglais américain », « japonais » dans
+la langue de l'interface. Quatre codes du jeu ne sont pas normalisés (`jp`,
+`sp`, `cz`, `nw`), ils ont leur table de correspondance ; un code inconnu
+ressort en majuscules plutôt que déguisé en nom.
+
+### Ce que le mixeur a révélé
+
+Poser un mod par-dessus un autre ne retirait pas la revendication du premier.
+Les deux annonçaient leurs fichiers, et les cartes affichaient 16 et 17 pour un
+dossier qui n'en portait que 17. Le défaut passait inaperçu tant qu'un mod
+était tout ou rien ; le mixeur, lui, a besoin de savoir à qui appartient chaque
+place.
+
+`reassignClaims` rend la revendication exclusive : `meta.files` répond
+désormais à « qu'est-ce que ce mod occupe sur le disque », pas « qu'est-ce
+qu'il a posé un jour ». Ce que le mod recouvert sait encore fournir n'est pas
+perdu : `meta.provides` le dit, et `restoreCovered` s'appuie sur lui pour
+rendre sa banque quand celui du dessus s'en va.
+
+Deux handlers IPC rendent maintenant la liste entière au lieu du seul
+enregistrement posé : recouvrir un mod change aussi le sien, et le renderer qui
+refabriquait la liste depuis sa copie perdait ce changement.
+
+### Le masterbank
+
+Signalé, jamais interdit. `masterbank` déclare les événements dont dépendent
+les autres banques, et deux auteurs le disent : PCSM demande de supprimer « the
+'masterbank' files that probably came from » un autre mod, IASM range ses
+fichiers de base sous « skip if mixing with RCSM ». Sa ligne porte donc une
+mise en garde au survol. Le joueur peut passer outre — c'est sa machine.
+
 ## Hors périmètre
 
 Les archives qui remplacent les sons de menu ne passent pas par `sound/mod/`.
@@ -245,6 +298,12 @@ archives et un dossier de jeu factice. Le check qui compte : deux mods livrent
 `masterbank.bank`, le second recouvre le premier, et le désactiver **repose** la
 banque du premier au lieu de laisser un trou. Sans ça, désactiver un mod
 casserait celui du dessous en silence.
+
+`npm run smoke:sound-slots` — 15 checks sur le mixeur : découpage des noms
+(la paire `.bank`/`.assets.bank` fait un seul emplacement, `blu` n'est pas une
+langue), revendication exclusive, et surtout le changement d'occupant — quand
+le nouveau ne fournit que le `.assets.bank`, le `.bank` de l'ancien doit partir
+quand même, sinon il resterait orphelin sur l'audio du nouveau.
 
 `coveredBy` a ses propres checks : recouvrement partiel, total, casse
 différente, mod inactif, réinstallation de soi-même, plusieurs mods touchés
