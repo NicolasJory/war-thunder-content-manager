@@ -39,6 +39,7 @@ import { LANGS, LOCALE, loadLang, saveLang, translator, type Key, type Lang, typ
 import { splitError } from "../../shared/errors";
 import { setSiteHosts } from "../../shared/deepLink";
 import { useFocusTrap } from "./useFocusTrap";
+import { useBackdrop } from "./useBackdrop";
 import { IconClose } from "./icons";
 
 type Toast = { id: number; msg: string; kind: "ok" | "err" };
@@ -444,6 +445,7 @@ function ExternalConfirm({ url, onClose }: { url: string; onClose: () => void })
   const { t, notify, tError } = useShell();
   const box = useRef<HTMLDivElement>(null);
   useFocusTrap(box);
+  const backdrop = useBackdrop(onClose);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -452,7 +454,7 @@ function ExternalConfirm({ url, onClose }: { url: string; onClose: () => void })
   }, [onClose]);
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdrop}>
       <div
         className="modal small"
         ref={box}
@@ -510,6 +512,7 @@ function InstallDialog({
   const inputRef = useRef<HTMLInputElement>(null);
   const box = useRef<HTMLDivElement>(null);
   useFocusTrap(box);
+  const backdrop = useBackdrop(onCancel);
 
   useEffect(() => {
     inputRef.current?.select();
@@ -603,7 +606,7 @@ function InstallDialog({
   const confirm = () => !blocked && onConfirm(trimmed, showChooser ? selected : undefined);
 
   return (
-    <div className="modal-backdrop" onClick={onCancel}>
+    <div className="modal-backdrop" {...backdrop}>
       <div
         className={showChooser ? "modal" : "modal small"}
         ref={box}
@@ -708,6 +711,7 @@ function RemoveActiveConfirm({
   const { t } = useShell();
   const box = useRef<HTMLDivElement>(null);
   useFocusTrap(box);
+  const backdrop = useBackdrop(onCancel);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
@@ -716,7 +720,7 @@ function RemoveActiveConfirm({
   }, [onCancel]);
 
   return (
-    <div className="modal-backdrop" onClick={onCancel}>
+    <div className="modal-backdrop" {...backdrop}>
       <div
         className="modal small"
         ref={box}

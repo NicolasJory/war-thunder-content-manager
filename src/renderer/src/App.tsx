@@ -332,6 +332,8 @@ function Shell({
           <Mixer
             records={config.installed}
             onRecords={(next) => onConfig({ ...config, installed: next })}
+            shortcut={config.overlayShortcut}
+            onShortcut={(v) => onConfig({ ...config, overlayShortcut: v })}
           />
         ) : tab === "favorites" ? (
           <Favorites

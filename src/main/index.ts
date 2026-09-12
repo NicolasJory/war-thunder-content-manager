@@ -36,6 +36,7 @@ import {
 } from "../shared/validate.js";
 import {
   createConfigStore,
+  DEFAULT_OVERLAY_SHORTCUT,
   detectGameDir,
   validateGameDir,
   type WtConfigFile,
@@ -135,12 +136,21 @@ let win: BrowserWindow | null = null;
 let overlay: BrowserWindow | null = null;
 
 /**
- * Raccourci qui montre et cache le panneau flottant.
+ * (Ré)enregistre le raccourci du panneau.
  *
- * Alt+X plutôt qu'une touche seule : War Thunder utilise l'essentiel du clavier,
- * et voler une touche au jeu se paie en plein vol.
+ * Rend faux quand la combinaison est refusée — déjà prise par une autre
+ * application, ou invalide. Ce n'est pas une panne : le panneau reste
+ * atteignable depuis la barre latérale, et l'interface le dit.
  */
-const OVERLAY_SHORTCUT = "Alt+X";
+function applyShortcut(combo: string): boolean {
+  globalShortcut.unregisterAll();
+  if (!combo) return true;
+  try {
+    return globalShortcut.register(combo, toggleOverlay) && globalShortcut.isRegistered(combo);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Panneau flottant : une fenêtre de plus, rien d'autre.
@@ -154,8 +164,8 @@ function createOverlay() {
   if (overlay && !overlay.isDestroyed()) return overlay;
 
   overlay = new BrowserWindow({
-    width: 380,
-    height: 620,
+    width: 440,
+    height: 720,
     show: false,
     frame: false,
     resizable: true,
@@ -657,6 +667,33 @@ function registerIpc() {
 
   ipcMain.handle("overlay:toggle", () => toggleOverlay());
 
+  /**
+   * Change le raccourci du panneau. Rend `false` si le système le refuse,
+   * auquel cas on remet celui d'avant plutôt que de laisser l'utilisateur
+   * sans raccourci du tout.
+   */
+  ipcMain.handle("overlay:setShortcut", async (_e, raw: unknown) => {
+    const combo = asString(raw, 64).trim();
+    const avant = (await store.get()).overlayShortcut || DEFAULT_OVERLAY_SHORTCUT;
+    if (!applyShortcut(combo)) {
+      applyShortcut(avant);
+      return false;
+    }
+    await store.set({ overlayShortcut: combo });
+    return true;
+  });
+
+  /**
+   * Ouvre une fiche dans la fenêtre principale depuis le panneau.
+   *
+   * Le panneau fait quatre cents pixels de large : une fiche détaillée n'y
+   * tiendrait pas. On réemploie le canal des liens entrants, qui sait déjà
+   * ramener la fenêtre au premier plan et y ouvrir un contenu.
+   */
+  ipcMain.handle("overlay:openInMain", (_e, langGroup: unknown) => {
+    deliverLink({ kind: "post", langGroup: asIndex(langGroup, Number.MAX_SAFE_INTEGER) });
+  });
+
   /** Le tableau du mixeur : un emplacement sonore par ligne. */
   ipcMain.handle("content:slots", async () => listSoundSlots(await requireGameDir()));
 
@@ -784,9 +821,7 @@ if (!primary) {
     registerIpc();
     createWindow();
 
-    // Un raccourci déjà pris par une autre application n'est pas une panne :
-    // le panneau reste atteignable, simplement pas au clavier.
-    globalShortcut.register(OVERLAY_SHORTCUT, toggleOverlay);
+    applyShortcut((await store.get()).overlayShortcut || DEFAULT_OVERLAY_SHORTCUT);
 
     // Après la fenêtre : une vérification de mise à jour ne doit pas retarder
     // l'affichage. Elle échoue en silence si le réseau manque.

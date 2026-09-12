@@ -43,6 +43,13 @@ const en = {
   overlayNoVehicleHelp:
     "Launch War Thunder and pick a vehicle: this panel follows what you have on screen.",
   overlayOpen: "Floating panel (Alt+X)",
+  shortcutLabel: "Panel shortcut",
+  shortcutPress: "Press a combination…",
+  shortcutNone: "None",
+  shortcutHelp:
+    "Click, then press the keys you want. It is registered system-wide, so pick something the game does not use.",
+  shortcutRefused:
+    "The system refused that combination, most likely another application holds it. The previous one is still active.",
   gameFolder: "Game folder",
   open: "Open",
   change: "Change",
@@ -321,6 +328,13 @@ const fr: Record<Key, string> = {
   overlayNoVehicleHelp:
     "Lance War Thunder et choisis un véhicule : ce panneau suit ce que tu as à l'écran.",
   overlayOpen: "Panneau flottant (Alt+X)",
+  shortcutLabel: "Raccourci du panneau",
+  shortcutPress: "Appuie sur une combinaison…",
+  shortcutNone: "Aucun",
+  shortcutHelp:
+    "Clique, puis appuie sur les touches voulues. Il est enregistré pour tout le système : choisis une combinaison que le jeu n'utilise pas.",
+  shortcutRefused:
+    "Le système a refusé cette combinaison, sans doute déjà prise par une autre application. L'ancienne reste active.",
   gameFolder: "Dossier du jeu",
   open: "Ouvrir",
   change: "Changer",
@@ -595,6 +609,13 @@ const ru: Record<Key, string> = {
   overlayNoVehicleHelp:
     "Запустите War Thunder и выберите технику: панель следует за тем, что у вас на экране.",
   overlayOpen: "Плавающая панель (Alt+X)",
+  shortcutLabel: "Сочетание для панели",
+  shortcutPress: "Нажмите сочетание…",
+  shortcutNone: "Нет",
+  shortcutHelp:
+    "Нажмите кнопку, затем нужные клавиши. Сочетание регистрируется на уровне системы — выберите то, что не занято игрой.",
+  shortcutRefused:
+    "Система отклонила это сочетание, скорее всего его уже занимает другое приложение. Прежнее осталось в силе.",
   gameFolder: "Папка игры",
   open: "Открыть",
   change: "Изменить",
@@ -865,6 +886,11 @@ const zh: Record<Key, string> = {
   overlayNoVehicle: "未检测到载具",
   overlayNoVehicleHelp: "启动《战争雷霆》并选择载具：此面板会跟随你屏幕上的选择。",
   overlayOpen: "浮动面板 (Alt+X)",
+  shortcutLabel: "面板快捷键",
+  shortcutPress: "请按下组合键…",
+  shortcutNone: "无",
+  shortcutHelp: "点击后按下所需按键。快捷键在系统级注册，请选择游戏未占用的组合。",
+  shortcutRefused: "系统拒绝了该组合，很可能已被其他应用占用。原有快捷键仍然有效。",
   gameFolder: "游戏文件夹",
   open: "打开",
   change: "更改",

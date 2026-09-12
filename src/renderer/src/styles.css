@@ -1983,6 +1983,13 @@ code {
 /* Une fenêtre posée au-dessus du jeu, jamais injectée dedans. Elle doit
    rester lisible sur n'importe quelle image : fond opaque, pas de verre. */
 
+/* La fenêtre du panneau est transparente pour que ses coins soient vraiment
+   arrondis. Sans cette règle, le fond sombre de `body` se peint derrière et
+   laisse quatre coins noirs autour de l'arrondi. */
+body.is-overlay {
+  background: transparent;
+}
+
 .overlay {
   display: flex;
   flex-direction: column;
@@ -2024,47 +2031,20 @@ code {
   color: var(--dim-55);
   line-height: 1.5;
 }
-.overlay-list {
+.overlay-scroll {
   flex: 1;
+  /* Sans ceci, rien ne défile : `min-height: auto` interdit à un élément flex
+     de rétrécir sous son contenu, donc `overflow-y` ne se déclenche jamais et
+     la liste déborde de la fenêtre au lieu de glisser dedans. */
+  min-height: 0;
   overflow-y: auto;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  padding: 12px;
 }
-.overlay-card {
-  display: flex;
-  gap: 9px;
-  padding: 6px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-}
-.overlay-card img,
-.overlay-thumb-empty {
-  width: 78px;
-  height: 48px;
-  flex: none;
-  object-fit: cover;
-  border-radius: var(--r-sm);
-  background: var(--wash-b);
-}
-.overlay-card-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 5px;
-  min-width: 0;
-  flex: 1;
-}
-.overlay-card-title {
-  font-size: 12px;
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+/* Une seule colonne : la fenêtre est étroite, et une vignette pleine largeur
+   est justement ce qu'on vient chercher — on choisit un camouflage à l'œil. */
+.overlay-grid {
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 /* Le bouton d'ouverture du panneau : dans le pied du rail, au-dessus du
    chemin du jeu. `full` lui donne `margin-top: auto`, qu'on annule ici — il
@@ -2072,4 +2052,25 @@ code {
 .overlay-open {
   margin-top: 0;
   margin-bottom: 14px;
+}
+
+/* ------------------------- Réglages ------------------------- */
+
+.settings-block {
+  padding: 14px 16px;
+  margin-bottom: 22px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  max-width: 560px;
+}
+.shortcut-field .hint {
+  margin: 8px 0 0;
+  max-width: 52ch;
+}
+/* Le raccourci se lit comme une touche, pas comme une phrase. */
+.shortcut-btn {
+  font-family: "Cascadia Mono", Consolas, ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  min-width: 190px;
 }

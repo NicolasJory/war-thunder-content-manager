@@ -59,6 +59,8 @@ const api = {
   overlay: {
     hide: () => ipcRenderer.invoke("overlay:hide"),
     toggle: () => ipcRenderer.invoke("overlay:toggle"),
+    openInMain: (langGroup: number) => ipcRenderer.invoke("overlay:openInMain", langGroup),
+    setShortcut: (combo: string) => ipcRenderer.invoke("overlay:setShortcut", combo),
   },
   /** Véhicule sélectionné dans le jeu, lu dans son fichier de profil. */
   currentVehicle: () => ipcRenderer.invoke("vehicle:current"),

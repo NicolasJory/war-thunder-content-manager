@@ -80,7 +80,13 @@ interface Api {
     setSlot(slot: string, to: number | null): Promise<InstalledRecord[]>;
     onProgress(cb: (p: Progress) => void): () => void;
   };
-  overlay: { hide(): Promise<void>; toggle(): Promise<void> };
+  overlay: {
+    hide(): Promise<void>;
+    toggle(): Promise<void>;
+    openInMain(langGroup: number): Promise<void>;
+    /** Faux si le système refuse la combinaison ; l'ancienne est remise. */
+    setShortcut(combo: string): Promise<boolean>;
+  };
   currentVehicle(): Promise<VehicleSelection>;
   onVehicleChange(cb: (s: VehicleSelection) => void): () => void;
   vehicleFont(): Promise<string | null>;

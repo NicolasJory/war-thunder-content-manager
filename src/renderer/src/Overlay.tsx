@@ -11,22 +11,18 @@
  * écran exclusif reprend la surface à toutes les autres fenêtres, et rien
  * d'inoffensif ne contourne ça.
  *
- * Le panneau ne sait rien faire que la fenêtre principale ne sache faire : il
- * montre le véhicule courant et ses camouflages, et rien d'autre. Tout le reste
- * — recherche, filtres, viseurs, audio — reste dans l'application.
+ * Les cartes, le défilement infini et le bouton d'installation sont ceux de
+ * l'application : le panneau n'en a pas de copie, il change juste de fenêtre.
+ * Ouvrir une fiche ramène la fenêtre principale — une fiche détaillée dans une
+ * colonne de quatre cents pixels ne rendrait service à personne.
  */
 
-import { useCallback, useEffect, useState } from "react";
-import {
-  api,
-  skinLabel,
-  thumbnail,
-  type Skin,
-  type Taxonomy,
-  type VehicleSelection,
-} from "./api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { api, type Skin, type Taxonomy, type VehicleSelection } from "./api";
+import { LoadMore, PageBadge, useInfiniteFeed } from "./feed";
 import { IconSight } from "./icons";
-import { InstallButton, useShell } from "./shell";
+import { SkinCard } from "./SkinCard";
+import { useShell } from "./shell";
 
 /** Nom lisible du véhicule, pris dans la taxonomie du filtre. */
 function vehicleName(taxonomy: Taxonomy | null, id: string): string {
@@ -35,10 +31,9 @@ function vehicleName(taxonomy: Taxonomy | null, id: string): string {
 
 export function Overlay() {
   const { t } = useShell();
+  const gridRef = useRef<HTMLDivElement>(null);
   const [taxonomy, setTaxonomy] = useState<Taxonomy | null>(null);
   const [inGame, setInGame] = useState<VehicleSelection | null>(null);
-  const [skins, setSkins] = useState<Skin[] | null>(null);
-  const [erreur, setErreur] = useState(false);
 
   useEffect(() => {
     api.content.filters("camouflage").then(setTaxonomy).catch(() => undefined);
@@ -50,22 +45,17 @@ export function Overlay() {
     return api.onVehicleChange((v) => alive && setInGame(v));
   }, []);
 
-  // Une recherche par véhicule à chaque changement. Le jeu n'écrit qu'au
-  // moment où le joueur bascule, donc ça ne se déclenche pas en rafale.
   const vehicle = inGame?.current ?? null;
-  useEffect(() => {
-    if (!vehicle) return;
-    let alive = true;
-    setSkins(null);
-    setErreur(false);
-    api.content
-      .search({ content: "camouflage", sort: "rating", vehicle })
-      .then((page) => alive && setSkins(page.data.list))
-      .catch(() => alive && setErreur(true));
-    return () => {
-      alive = false;
-    };
-  }, [vehicle]);
+
+  // Le même défilement infini que la recherche : changer de véhicule ouvre une
+  // nouvelle génération et jette les réponses de la précédente.
+  const feed = useInfiniteFeed(vehicle ?? "", (page) =>
+    vehicle
+      ? api.content
+          .search({ content: "camouflage", sort: "rating", vehicle, page })
+          .then((p) => p.data.list)
+      : Promise.resolve([])
+  );
 
   const fermer = useCallback(() => void api.overlay.hide(), []);
 
@@ -74,6 +64,11 @@ export function Overlay() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [fermer]);
+
+  /** La fiche s'ouvre dans la fenêtre principale, qui a la place de l'afficher. */
+  const ouvrir = useCallback((skin: Skin) => {
+    void api.overlay.openInMain(skin.lang_group);
+  }, []);
 
   return (
     <div className="overlay">
@@ -89,31 +84,39 @@ export function Overlay() {
 
       {!vehicle ? (
         <p className="overlay-note">{t("overlayNoVehicleHelp")}</p>
-      ) : erreur ? (
-        <p className="overlay-note">{t("E_API")}</p>
-      ) : !skins ? (
+      ) : feed.error && feed.items.length === 0 ? (
+        <div className="overlay-note">
+          <p>{feed.error}</p>
+          <button className="btn" onClick={feed.retry}>
+            {t("retry")}
+          </button>
+        </div>
+      ) : feed.loading ? (
         <p className="overlay-note">
           <span className="spinner" /> {t("loading")}
         </p>
-      ) : skins.length === 0 ? (
+      ) : feed.items.length === 0 ? (
         <p className="overlay-note">{t("noResults")}</p>
       ) : (
-        <div className="overlay-list">
-          {skins.slice(0, 12).map((skin) => (
-            <article key={skin.lang_group} className="overlay-card">
-              {thumbnail(skin) ? (
-                <img src={thumbnail(skin)} alt="" loading="lazy" />
-              ) : (
-                <div className="overlay-thumb-empty" />
-              )}
-              <div className="overlay-card-body">
-                <span className="overlay-card-title" title={skinLabel(skin)}>
-                  {skinLabel(skin)}
-                </span>
-                <InstallButton skin={skin} block={false} />
-              </div>
-            </article>
-          ))}
+        <div className="overlay-scroll">
+          <div className="grid overlay-grid" ref={gridRef}>
+            {feed.items.map((skin, i) => (
+              <SkinCard
+                key={`${skin.lang_group}-${i}`}
+                skin={skin}
+                page={feed.pageOf[i]}
+                onOpen={() => ouvrir(skin)}
+                onTag={() => undefined}
+              />
+            ))}
+          </div>
+          <LoadMore onReach={feed.loadMore} disabled={feed.done || feed.appending} />
+          {feed.appending && (
+            <p className="overlay-note">
+              <span className="spinner" /> {t("loading")}
+            </p>
+          )}
+          <PageBadge gridRef={gridRef} total={feed.items.length} />
         </div>
       )}
     </div>

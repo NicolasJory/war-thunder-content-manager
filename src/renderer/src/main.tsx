@@ -14,6 +14,10 @@ import "./styles.css";
 
 const estOverlay = window.location.hash === "#overlay";
 
+// La classe porte la transparence du fond : la fenêtre du panneau est
+// transparente, le `body` opaque de l'application y ferait des coins noirs.
+if (estOverlay) document.body.classList.add("is-overlay");
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>{estOverlay ? <OverlayRoot /> : <App />}</StrictMode>
 );

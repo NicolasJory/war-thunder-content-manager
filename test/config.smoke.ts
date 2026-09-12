@@ -9,6 +9,8 @@ import { rmSync } from "fs";
 import path from "path";
 import {
   createConfigStore,
+  DEFAULT_OVERLAY_SHORTCUT,
+  EMPTY_CONFIG,
   detectGameDir,
   parseLibraryFolders,
   validateGameDir,
@@ -86,8 +88,17 @@ async function main() {
   console.log("\n[3] Persistance");
   const file = path.join(SANDBOX, "userData", "config.json");
   const store = createConfigStore(file);
-  assert.deepEqual(await store.get(), { gameDir: "", installed: [], favorites: [] });
+  assert.deepEqual(await store.get(), EMPTY_CONFIG);
   ok("config absente -> config vide, pas de crash");
+
+  // Une configuration ecrite avant le panneau flottant n'a pas de
+  // raccourci : elle doit recevoir celui par defaut, pas une chaine vide
+  // qui laisserait l'utilisateur sans raccourci du tout.
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  await fs.writeFile(file, JSON.stringify({ gameDir: "", installed: [], favorites: [] }));
+  const ancienne = await createConfigStore(file).get();
+  assert.equal(ancienne.overlayShortcut, DEFAULT_OVERLAY_SHORTCUT);
+  ok("config d'avant le panneau : raccourci par defaut ajoute");
 
   await store.set({ gameDir: fake });
   const reread = createConfigStore(file);
@@ -107,7 +118,7 @@ async function main() {
   ok("les favoris persistent sans ecraser le reste");
 
   await fs.writeFile(file, "{ pas du json");
-  assert.deepEqual(await createConfigStore(file).get(), { gameDir: "", installed: [], favorites: [] });
+  assert.deepEqual(await createConfigStore(file).get(), EMPTY_CONFIG);
   ok("config corrompue -> config vide au lieu d'un crash au demarrage");
 
   console.log("\n[4] Auto-detection sur cette machine");

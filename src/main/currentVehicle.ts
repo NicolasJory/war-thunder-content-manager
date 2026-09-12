@@ -108,7 +108,11 @@ export async function readSelection(): Promise<VehicleSelection> {
  */
 export function watchSelection(
   onChange: (s: VehicleSelection) => void,
-  intervalMs = 1000
+  // Mesuré : `watchFile` voit une écriture au bout d'environ un intervalle —
+  // 900 ms à 1000, 281 ms à 400, 78 ms à 200. À 250 le changement de véhicule
+  // paraît immédiat, et le coût reste un `stat` quatre fois par seconde : le
+  // fichier n'est relu que lorsqu'il a bougé.
+  intervalMs = 250
 ): () => void {
   let stopped = false;
   let dernier: string | null = null;

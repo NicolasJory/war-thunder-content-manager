@@ -26,6 +26,7 @@ import {
 import { IconChevronLeft, IconChevronRight, IconClose } from "./icons";
 import { Avatar } from "./SkinCard";
 import { InstallButton, SoundState, useShell } from "./shell";
+import { useBackdrop } from "./useBackdrop";
 import { useFocusTrap } from "./useFocusTrap";
 import { appUrl, shareUrl } from "../../shared/deepLink";
 
@@ -41,6 +42,7 @@ interface Props {
 export function Detail({ skin, onTag, onAuthor, isFavorite, onToggleFavorite, onClose }: Props) {
   const { t, locale, openExternal, copy, recordFor } = useShell();
   const record = recordFor(skin.lang_group);
+  const backdrop = useBackdrop(onClose);
   const images = imagesOf(skin);
   const [index, setIndex] = useState(0);
   const [fallback, setFallback] = useState<Record<number, boolean>>({});
@@ -128,7 +130,7 @@ export function Detail({ skin, onTag, onAuthor, isFavorite, onToggleFavorite, on
   const current = images[index] ?? "";
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdrop}>
       <div
         className="sheet"
         ref={sheetRef}

@@ -14,15 +14,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type InstalledRecord, type SoundSlot } from "./api";
 import { IconInfo } from "./icons";
+import { ShortcutField } from "./ShortcutField";
 import { slotLabel } from "./slotLabel";
 import { useShell } from "./shell";
 
 export function Mixer({
   records,
   onRecords,
+  shortcut,
+  onShortcut,
 }: {
   records: InstalledRecord[];
   onRecords: (records: InstalledRecord[]) => void;
+  shortcut: string;
+  onShortcut: (v: string) => void;
 }) {
   const { t, locale, notify, tError } = useShell();
   const [slots, setSlots] = useState<SoundSlot[] | null>(null);
@@ -87,6 +92,12 @@ export function Mixer({
           </p>
         </div>
       </div>
+
+      {/* Le panneau flottant se règle ici : c'est la page des réglages, et son
+          raccourci est global, donc susceptible d'être déjà pris. */}
+      <section className="settings-block">
+        <ShortcutField value={shortcut} onSaved={onShortcut} />
+      </section>
 
       {/* Sans mod audio téléchargé, il n'y a aucune place à attribuer : on le
           dit plutôt que d'afficher un tableau vide. */}

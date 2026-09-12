@@ -33,9 +33,25 @@ export interface WtConfigFile {
   gameDir: string;
   installed: InstalledRecord[];
   favorites: FavoriteAuthor[];
+  /**
+   * Raccourci global qui montre le panneau flottant.
+   *
+   * Réglable parce qu'il est enregistré à l'échelle du système : la
+   * combinaison par défaut peut très bien être déjà prise par une autre
+   * application, et rien dans le jeu n'en avertirait.
+   */
+  overlayShortcut: string;
 }
 
-export const EMPTY_CONFIG: WtConfigFile = { gameDir: "", installed: [], favorites: [] };
+/** Alt+X plutôt qu'une touche seule : War Thunder occupe l'essentiel du clavier. */
+export const DEFAULT_OVERLAY_SHORTCUT = "Alt+X";
+
+export const EMPTY_CONFIG: WtConfigFile = {
+  gameDir: "",
+  installed: [],
+  favorites: [],
+  overlayShortcut: DEFAULT_OVERLAY_SHORTCUT,
+};
 
 // ------------------------- Validation d'un dossier ------------------------- //
 
@@ -173,6 +189,13 @@ export function createConfigStore(filePath: string): ConfigStore {
         gameDir: typeof parsed.gameDir === "string" ? parsed.gameDir : "",
         installed: Array.isArray(parsed.installed) ? parsed.installed : [],
         favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
+        // Absent des configurations écrites avant le panneau flottant : on
+        // retombe sur la combinaison par défaut plutôt que sur une chaîne
+        // vide, qui aurait laissé l'utilisateur sans raccourci du tout.
+        overlayShortcut:
+          typeof parsed.overlayShortcut === "string"
+            ? parsed.overlayShortcut
+            : DEFAULT_OVERLAY_SHORTCUT,
       };
     } catch {
       // Absent ou corrompu : on repart d'une config vide plutôt que de planter
