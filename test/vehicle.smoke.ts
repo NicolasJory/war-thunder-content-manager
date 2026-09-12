@@ -170,6 +170,14 @@ const viser = (port: number) =>
   }
   ok("reponse deformee : null, jamais une valeur inventee");
 
+  // Les chars arrivent prefixes par leur famille de modeles. Passer le
+  // chemin complet au filtre ne remontait aucun camouflage, en silence.
+  reponse = { valid: true, army: "tank", type: "tankModels/ussr_t_44_100" };
+  assert.equal(await readFromGame(), "ussr_t_44_100");
+  reponse = { valid: true, army: "air", type: "su-9" };
+  assert.equal(await readFromGame(), "su-9", "un avion nu ne doit pas etre ampute");
+  ok("prefixe de famille retire, forme nue laissee intacte");
+
   // Le serveur du jeu l'emporte sur le fichier, qui est en retard par nature.
   reponse = { valid: true, type: "yak-15" };
   const combine = await readSelection();

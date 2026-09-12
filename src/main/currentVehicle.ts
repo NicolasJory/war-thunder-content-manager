@@ -41,6 +41,20 @@ const VIDE: VehicleSelection = { current: null, byNation: {} };
 // ------------------------- Source 1 : le serveur du jeu ------------------------- //
 
 /**
+ * Le serveur préfixe certains types par une famille de modèles.
+ *
+ * Relevé sur le jeu : un char rend `tankModels/ussr_t_44_100`, un avion rend
+ * `su-9` tout court. Le filtre véhicule attend la forme nue — passer le
+ * chemin complet ne remontait aucun camouflage, en silence.
+ *
+ * On garde le dernier segment plutôt que d'énumérer les préfixes : ça couvre
+ * d'avance les familles qu'on n'a pas encore vues, navires compris.
+ */
+function normaliseType(type: string): string {
+  return type.slice(type.lastIndexOf("/") + 1);
+}
+
+/**
  * Véhicule courant selon le jeu lui-même, ou `null` s'il ne répond pas.
  *
  * Le délai est court volontairement : cette lecture se répète, et un jeu qui
@@ -56,7 +70,7 @@ export async function readFromGame(): Promise<string | null> {
     // `valid: false` arrive entre deux écrans : le jeu tourne mais n'est dans
     // aucun véhicule. Ce n'est pas une panne, c'est « rien à dire ».
     if (!data.valid || typeof data.type !== "string" || !data.type) return null;
-    return data.type;
+    return normaliseType(data.type);
   } catch {
     // Jeu fermé, serveur pas encore levé, ou transition d'écran.
     return null;
