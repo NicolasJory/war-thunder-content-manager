@@ -5,7 +5,16 @@
  * par le preload — jamais fs, jamais le réseau Live.
  */
 
-import { app, BrowserWindow, clipboard, dialog, ipcMain, session, shell } from "electron";
+import {
+  app,
+  BrowserWindow,
+  clipboard,
+  dialog,
+  globalShortcut,
+  ipcMain,
+  session,
+  shell,
+} from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 import filtersFallback from "./filters.fallback.json" with { type: "json" };
@@ -14,6 +23,7 @@ import { parseDeepLink, setSiteHosts, SCHEME, type DeepLink } from "../shared/de
 import { DEFAULT_ENDPOINTS, type Endpoints } from "../shared/endpoints.js";
 import { isPortable, resolveEndpoints, startUpdater } from "./updater.js";
 import { defaultSelection, planSoundLayout } from "./soundLayout.js";
+import { readSelection, watchSelection } from "./currentVehicle.js";
 import {
   asIndex,
   asGroups,
@@ -122,6 +132,72 @@ function deliverLink(link: DeepLink | null) {
 
 let store: ReturnType<typeof createConfigStore>;
 let win: BrowserWindow | null = null;
+let overlay: BrowserWindow | null = null;
+
+/**
+ * Raccourci qui montre et cache le panneau flottant.
+ *
+ * Alt+X plutôt qu'une touche seule : War Thunder utilise l'essentiel du clavier,
+ * et voler une touche au jeu se paie en plein vol.
+ */
+const OVERLAY_SHORTCUT = "Alt+X";
+
+/**
+ * Panneau flottant : une fenêtre de plus, rien d'autre.
+ *
+ * Aucun contact avec le processus du jeu — ni injection, ni hook, ni lecture
+ * mémoire. BattlEye sanctionne ces trois gestes ; poser une fenêtre au-dessus
+ * n'en est aucun. La contrepartie est connue : le plein écran exclusif reprend
+ * la surface et masque le panneau. Seul le plein écran fenêtré convient.
+ */
+function createOverlay() {
+  if (overlay && !overlay.isDestroyed()) return overlay;
+
+  overlay = new BrowserWindow({
+    width: 380,
+    height: 620,
+    show: false,
+    frame: false,
+    resizable: true,
+    skipTaskbar: true,
+    backgroundColor: "#00000000",
+    transparent: true,
+    webPreferences: {
+      preload: path.join(dirname, "../preload/index.cjs"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  // "screen-saver" est le seul niveau qui passe au-dessus d'un jeu en plein
+  // écran fenêtré sous Windows ; "floating" reste sous lui.
+  overlay.setAlwaysOnTop(true, "screen-saver");
+  overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  overlay.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  overlay.webContents.on("will-navigate", (e) => e.preventDefault());
+
+  if (process.env.ELECTRON_RENDERER_URL) {
+    overlay.loadURL(`${process.env.ELECTRON_RENDERER_URL}#overlay`);
+  } else {
+    overlay.loadFile(path.join(dirname, "../renderer/index.html"), { hash: "overlay" });
+  }
+
+  overlay.on("closed", () => {
+    overlay = null;
+  });
+  return overlay;
+}
+
+function toggleOverlay() {
+  const w = createOverlay();
+  if (w.isVisible()) {
+    w.hide();
+    return;
+  }
+  w.show();
+  w.focus();
+}
 
 // ------------------------- Fenêtre ------------------------- //
 
@@ -146,6 +222,20 @@ function createWindow() {
   });
 
   win.once("ready-to-show", () => win?.show());
+
+  // Le jeu réécrit son profil au moment où le joueur change de véhicule : on
+  // pousse le changement plutôt que de faire interroger le renderer.
+  const stopWatch = watchSelection((selection) => {
+    for (const w of [win, overlay]) {
+      if (w && !w.isDestroyed() && !w.webContents.isDestroyed()) {
+        w.webContents.send("vehicle:changed", selection);
+      }
+    }
+  });
+  win.on("closed", () => {
+    stopWatch();
+    win = null;
+  });
 
   // Rien ne s'ouvre tout seul vers l'extérieur. Un lien cliqué dans la page est
   // refusé sans discuter : le seul chemin vers le navigateur système passe par
@@ -551,6 +641,22 @@ function registerIpc() {
    */
   ipcMain.handle("content:foreignBanks", async () => listForeignBanks(await requireGameDir()));
 
+  /**
+   * Véhicule que le joueur a sélectionné dans le jeu.
+   *
+   * Lu dans son fichier de profil, jamais dans le processus du jeu. Ne demande
+   * pas que le dossier du jeu soit configuré : le profil vit ailleurs, sous
+   * Documents, et peut se lire avant même le premier réglage.
+   */
+  ipcMain.handle("vehicle:current", () => readSelection());
+
+  /** Le panneau se referme lui-même ; la fenêtre reste prête pour la suite. */
+  ipcMain.handle("overlay:hide", () => {
+    if (overlay && !overlay.isDestroyed()) overlay.hide();
+  });
+
+  ipcMain.handle("overlay:toggle", () => toggleOverlay());
+
   /** Le tableau du mixeur : un emplacement sonore par ligne. */
   ipcMain.handle("content:slots", async () => listSoundSlots(await requireGameDir()));
 
@@ -678,6 +784,10 @@ if (!primary) {
     registerIpc();
     createWindow();
 
+    // Un raccourci déjà pris par une autre application n'est pas une panne :
+    // le panneau reste atteignable, simplement pas au clavier.
+    globalShortcut.register(OVERLAY_SHORTCUT, toggleOverlay);
+
     // Après la fenêtre : une vérification de mise à jour ne doit pas retarder
     // l'affichage. Elle échoue en silence si le réseau manque.
     startUpdater();
@@ -687,6 +797,8 @@ if (!primary) {
     });
   });
 }
+
+app.on("will-quit", () => globalShortcut.unregisterAll());
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();

@@ -80,6 +80,9 @@ interface Api {
     setSlot(slot: string, to: number | null): Promise<InstalledRecord[]>;
     onProgress(cb: (p: Progress) => void): () => void;
   };
+  overlay: { hide(): Promise<void>; toggle(): Promise<void> };
+  currentVehicle(): Promise<VehicleSelection>;
+  onVehicleChange(cb: (s: VehicleSelection) => void): () => void;
   vehicleFont(): Promise<string | null>;
   openSkinsFolder(): Promise<void>;
   openExternal(url: string): Promise<void>;
@@ -190,6 +193,18 @@ export function coveredBy(
 /** Y a-t-il quelque chose à signaler ? Évite de tester deux listes partout. */
 export const coversSomething = (r: CoverReport): boolean =>
   r.mods.length > 0 || r.foreign.length > 0;
+
+/**
+ * Véhicule que le joueur a sous les yeux dans le jeu.
+ *
+ * Les identifiants sont ceux du filtre véhicule — `ussr_t_44_100` y désigne
+ * « T-44-100 » — donc ils s'y appliquent sans conversion.
+ */
+export interface VehicleSelection {
+  current: string | null;
+  /** Dernier véhicule retenu par nation : `germany` → `germ_leopard_I`. */
+  byNation: Record<string, string>;
+}
 
 export interface ForeignFolder {
   name: string;

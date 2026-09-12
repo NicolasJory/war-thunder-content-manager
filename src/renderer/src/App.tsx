@@ -278,6 +278,12 @@ function Shell({
         </nav>
 
         <div className="rail-foot">
+          {/* Le raccourci global peut être déjà pris par une autre
+              application : le panneau reste atteignable à la souris. */}
+          <button className="btn full overlay-open" onClick={() => api.overlay.toggle()}>
+            <IconSight size={13} />
+            {t("overlayOpen")}
+          </button>
           <span className="rail-label">{t("gameFolder")}</span>
           <span className="rail-path" title={config.gameDir}>
             {config.gameDir}

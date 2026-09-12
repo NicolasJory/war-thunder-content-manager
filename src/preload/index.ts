@@ -55,6 +55,18 @@ const api = {
       return () => ipcRenderer.removeListener("install:progress", handler);
     },
   },
+  /** Panneau flottant : se montre au raccourci, se cache lui-même. */
+  overlay: {
+    hide: () => ipcRenderer.invoke("overlay:hide"),
+    toggle: () => ipcRenderer.invoke("overlay:toggle"),
+  },
+  /** Véhicule sélectionné dans le jeu, lu dans son fichier de profil. */
+  currentVehicle: () => ipcRenderer.invoke("vehicle:current"),
+  onVehicleChange: (cb: (s: unknown) => void) => {
+    const handler = (_e: IpcRendererEvent, s: unknown) => cb(s);
+    ipcRenderer.on("vehicle:changed", handler);
+    return () => ipcRenderer.removeListener("vehicle:changed", handler);
+  },
   vehicleFont: () => ipcRenderer.invoke("assets:vehicleFont"),
   openSkinsFolder: () => ipcRenderer.invoke("shell:openSkinsFolder"),
   // Le renderer ne doit appeler ceci qu'après consentement explicite.

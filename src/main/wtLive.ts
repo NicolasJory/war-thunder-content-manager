@@ -26,6 +26,7 @@ import { ERR, fail } from "../shared/errors.js";
 import { DEFAULT_ENDPOINTS, type Endpoints } from "../shared/endpoints.js";
 import { planSightLayout } from "./sightLayout.js";
 import { isRisky, slotOf } from "./soundSlots.js";
+import { resolveProfileDir } from "./wtProfile.js";
 import {
   defaultSelection,
   isValidSelection,
@@ -35,7 +36,6 @@ import {
   targetName,
   type SoundPlan,
 } from "./soundLayout.js";
-import { homedir } from "os";
 import { tmpdir } from "os";
 
 /**
@@ -907,39 +907,14 @@ export async function listForeign(
  * Retrouve le dossier des viseurs du compte courant.
  *
  * Les viseurs ne vivent pas dans le dossier du jeu mais sous
- * `Documents/My Games/WarThunder/Saves/<uid>/production/UserSights`, avec un
- * dossier par compte connecté sur la machine.
- *
- * Le brief prévoyait de demander à l'utilisateur en cas d'ambiguïté. Ce n'est
- * pas nécessaire : le jeu écrit `Saves/lastlogin.blk` contenant
- * `uid:i64=<identifiant>`, qui désigne le dernier compte utilisé. On s'en sert,
- * et on ne retombe sur un choix automatique que s'il manque.
+ * `Documents/My Games/WarThunder/Saves/<uid>/production/UserSights`. Le choix
+ * du compte, quand plusieurs ont servi sur la machine, est fait par
+ * `resolveProfileDir` — `global.blk` se trouve au même endroit et pose la même
+ * question.
  */
 export async function resolveSightsDir(): Promise<string | null> {
-  const saves = path.join(homedir(), "Documents", "My Games", "WarThunder", "Saves");
-
-  let accounts: string[];
-  try {
-    accounts = (await fs.readdir(saves, { withFileTypes: true }))
-      .filter((e) => e.isDirectory() && /^\d+$/.test(e.name))
-      .map((e) => e.name);
-  } catch {
-    return null; // le jeu n'a jamais été lancé sur cette machine
-  }
-  if (accounts.length === 0) return null;
-
-  let chosen = accounts[0];
-  if (accounts.length > 1) {
-    try {
-      const blk = await fs.readFile(path.join(saves, "lastlogin.blk"), "utf8");
-      const uid = blk.match(/uid\s*:\s*i64\s*=\s*(\d+)/)?.[1];
-      if (uid && accounts.includes(uid)) chosen = uid;
-    } catch {
-      // Pas de lastlogin lisible : on garde le premier compte trouvé plutôt
-      // que d'échouer. Le joueur verra le chemin exact dans l'application.
-    }
-  }
-  return path.join(saves, chosen, "production", "UserSights");
+  const dir = await resolveProfileDir();
+  return dir ? path.join(dir, "UserSights") : null;
 }
 
 /**

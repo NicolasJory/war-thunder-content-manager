@@ -13,12 +13,13 @@ import {
   type FilterKey,
   type Option,
   type Selection,
+  type VehicleSelection,
   type Skin,
   type SortKey,
   type Taxonomy,
 } from "./api";
 import { LoadMore, PageBadge, useInfiniteFeed } from "./feed";
-import { IconClose, IconInfo } from "./icons";
+import { IconClose, IconInfo, IconSight } from "./icons";
 import { HoverPreview, useHoverTarget } from "./HoverPreview";
 import { CardSkeletons, SkinCard } from "./SkinCard";
 import { useShell } from "./shell";
@@ -218,17 +219,42 @@ interface Props {
   onLink: (raw: string) => boolean;
 }
 
+/**
+ * Nom affichable d'un véhicule. La taxonomie du filtre le porte déjà
+ * (`ussr_t_44_100` → « T-44-100 ») ; l'identifiant brut sert de repli tant
+ * qu'elle n'est pas chargée.
+ */
+function vehicleName(taxonomy: Taxonomy | null, id: string): string {
+  return taxonomy?.vehicle?.variants?.find((v) => v.value === id)?.name ?? id;
+}
+
 export function Browse({ onOpen, onAuthor, term, onTerm, onLink }: Props) {
   const { t, content } = useShell();
   const [taxonomy, setTaxonomy] = useState<Taxonomy | null>(null);
   const [taxonomyError, setTaxonomyError] = useState(false);
   const [sel, setSel] = useState<Selection>({});
+  /**
+   * Véhicule que le joueur a sous les yeux dans le jeu, lu dans son profil.
+   *
+   * Le jeu réécrit le fichier au moment où il change de véhicule, donc la
+   * valeur suit sans qu'on ait à interroger quoi que ce soit. `null` tant que
+   * le jeu n'a jamais tourné sur cette machine.
+   */
+  const [inGame, setInGame] = useState<VehicleSelection | null>(null);
   const [sort, setSort] = useState<SortKey>("rating");
   const [draft, setDraft] = useState(term);
   const gridRef = useRef<HTMLDivElement>(null);
   const hover = useHoverTarget();
 
   useEffect(() => setDraft(term), [term]);
+
+  useEffect(() => {
+    let alive = true;
+    api.currentVehicle()
+      .then((v) => alive && setInGame(v))
+      .catch(() => undefined);
+    return api.onVehicleChange((v) => alive && setInGame(v));
+  }, []);
 
   useEffect(() => {
     api.content
@@ -392,6 +418,21 @@ export function Browse({ onOpen, onAuthor, term, onTerm, onLink }: Props) {
         <p className="banner">
           <IconInfo size={14} />
           {t("filtersFailed")}
+        </p>
+      )}
+
+      {/* Le véhicule du jeu, proposé en un clic. Le filtre attend exactement
+          l'identifiant que le jeu écrit : aucune conversion. */}
+      {inGame?.current && sel.vehicle !== inGame.current && (
+        <p className="banner ingame">
+          <IconSight size={14} />
+          {t("inGameVehicle", { name: vehicleName(taxonomy, inGame.current) })}
+          <button
+            className="btn"
+            onClick={() => setSel((prev) => ({ ...prev, vehicle: inGame.current ?? undefined }))}
+          >
+            {t("inGameShow")}
+          </button>
         </p>
       )}
 

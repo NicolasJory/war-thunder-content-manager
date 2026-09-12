@@ -21,7 +21,8 @@
     "smoke:network": "tsx test/network.smoke.ts",
     "smoke:sound": "tsx test/sound.smoke.ts",
     "smoke:sound-install": "tsx test/sound-install.smoke.ts",
-    "smoke:sound-slots": "tsx test/sound-slots.smoke.ts"
+    "smoke:sound-slots": "tsx test/sound-slots.smoke.ts",
+    "smoke:vehicle": "tsx test/vehicle.smoke.ts"
   },
   "dependencies": {
     "adm-zip": "^0.6.0",
