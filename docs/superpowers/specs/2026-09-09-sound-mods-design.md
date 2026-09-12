@@ -270,6 +270,17 @@ Deux handlers IPC rendent maintenant la liste entière au lieu du seul
 enregistrement posé : recouvrir un mod change aussi le sien, et le renderer qui
 refabriquait la liste depuis sa copie perdait ce changement.
 
+### Où il vit
+
+Son propre onglet, « Paramètres audio », sous l'entrée « Audio » de la barre
+latérale. Il était d'abord une section de l'onglet Installés, ce qui le mettait
+au mauvais endroit : Installés parle de contenu qu'on a récupéré, le mixeur dit
+lequel joue. Trente lignes de réglages sous des cartes de mods n'appartenaient
+pas à la même page.
+
+L'interface dit « audio », plus « son » : le mot couvre aussi bien les voix
+d'équipage que les moteurs, et il reste le même en anglais.
+
 ### Le masterbank
 
 Signalé, jamais interdit. `masterbank` déclare les événements dont dépendent

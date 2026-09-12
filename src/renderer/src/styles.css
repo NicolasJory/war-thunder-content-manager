@@ -1916,14 +1916,6 @@ code {
 
 /* ------------------------- Mixeur audio ------------------------- */
 
-.mixer {
-  margin-top: 28px;
-}
-.mixer-help {
-  margin: 0 0 14px;
-  font-size: 12px;
-  max-width: 62ch;
-}
 .mixer-group {
   margin-bottom: 16px;
 }

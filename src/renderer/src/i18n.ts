@@ -37,7 +37,8 @@ const en = {
   tabInstalled: "Installed",
   soon: "Soon",
   navSights: "Sights",
-  navSounds: "Sound mods",
+  navSounds: "Audio",
+  tabAudioSettings: "Audio settings",
   gameFolder: "Game folder",
   open: "Open",
   change: "Change",
@@ -199,7 +200,7 @@ const en = {
   installedToast: "{name} installed.",
   uninstalledToast: "{name} removed.",
   sightOverwriteToast: "Also replaced reticles used by {names}.",
-  // Mods son
+  // Mods audio
   activate: "Activate",
   deactivate: "Deactivate",
   activating: "Activating…",
@@ -209,26 +210,26 @@ const en = {
   activatedToast: "{name} is now in the game.",
   deactivatedToast: "{name} taken out of the game. Its archive is kept.",
   activateFailed: "Could not change this mod: {reason}",
-  soundOverwriteToast: "Also replaced sounds provided by {names}.",
-  soundBankCount: "{n} sound files",
+  soundOverwriteToast: "Also replaced audio provided by {names}.",
+  soundBankCount: "{n} audio files",
   removeActiveTitle: "Uninstall {name}?",
   removeActiveBody:
-    "This mod is in the game right now. Uninstalling deletes its sound files AND its archive: nothing is kept. Deactivate instead if you want to keep the archive.",
+    "This mod is in the game right now. Uninstalling deletes its audio files AND its archive: nothing is kept. Deactivate instead if you want to keep the archive.",
   chooseTitle: "Choose what goes in",
   chooseAdditiveHelp: "Untick whatever you would rather not have.",
-  chooseExclusiveHelp: "These replace the same sound files, so only one can go in.",
+  chooseExclusiveHelp: "These replace the same audio files, so only one can go in.",
   chooseRootGroup: "Base files",
   chooseNone: "Keep at least one part.",
   // Mixeur : emplacements sonores. Les libellés se composent — véhicule +
   // aspect, ou famille + langue — donc on ne traduit que les morceaux.
-  mixerTitle: "Sound mixer",
+  mixerTitle: "Audio mixer",
   mixerHelp:
-    "Each row is one sound the game reads. Pick which downloaded mod fills it, or leave it to the game.",
-  mixerEmpty: "Install a sound mod to mix its sounds with another.",
+    "Each row is one audio file the game reads. Pick which downloaded mod fills it, or leave it to the game.",
+  mixerEmpty: "Install an audio mod to mix it with another.",
   mixerStock: "Game default",
   mixerForeign: "Put there by hand",
   mixerRisky:
-    "Mixing this one across mods is what breaks sound. Authors ask you to keep a single mod's masterbank.",
+    "Mixing this one across mods is what breaks audio. Authors ask you to keep a single mod's masterbank.",
   mixerOccupied: "{n} of {total} filled",
   slotVehicle_tanks: "Tanks",
   slotVehicle_aircraft: "Aircraft",
@@ -263,11 +264,11 @@ const en = {
   slot_hangar: "Hangar",
   overwriteWarnTitle: "This will cover mods already in the game",
   overwriteWarnAll:
-    "{names} would go silent: every one of its sound files gets replaced. Deactivate it if you would rather not keep it that way.",
+    "{names} would go silent: every one of its audio files gets replaced. Deactivate it if you would rather not keep it that way.",
   overwriteWarnSome:
-    "Some sounds from {names} get replaced. Those mods keep playing everything else.",
+    "Some audio from {names} gets replaced. Those mods keep playing everything else.",
   overwriteWarnForeign:
-    "{n} sound files already in sound/mod get replaced. The app did not put them there, so it cannot say which mod they belong to or put them back.",
+    "{n} audio files already in sound/mod get replaced. The app did not put them there, so it cannot say which mod they belong to or put them back.",
   sightVehicleCount: "{n} vehicles",
   installFailed: "Install failed: {reason}",
   uninstallFailed: "Removal failed: {reason}",
@@ -296,7 +297,7 @@ const en = {
   E_NOT_INSTALLED:
     "This content is not tracked as installed by the application, so it was not touched.",
   E_NEEDS_CHOICE:
-    "This archive offers several versions of the same sounds. Pick one before installing.",
+    "This archive offers several versions of the same audio. Pick one before installing.",
   E_NO_LIBRARY: "The application could not work out where to keep downloaded archives.",
   E_NO_CONFIG_BLK:
     "config.blk is missing. Launch War Thunder once so it creates the file, then try again.",
@@ -322,7 +323,8 @@ const fr: Record<Key, string> = {
   tabInstalled: "Installés",
   soon: "Bientôt",
   navSights: "Viseurs",
-  navSounds: "Mods son",
+  navSounds: "Audio",
+  tabAudioSettings: "Paramètres audio",
   gameFolder: "Dossier du jeu",
   open: "Ouvrir",
   change: "Changer",
@@ -478,7 +480,7 @@ const fr: Record<Key, string> = {
   installedToast: "{name} installé.",
   uninstalledToast: "{name} désinstallé.",
   sightOverwriteToast: "A aussi remplacé des viseurs utilisés par {names}.",
-  // Mods son
+  // Mods audio
   activate: "Activer",
   deactivate: "Désactiver",
   activating: "Activation…",
@@ -488,27 +490,27 @@ const fr: Record<Key, string> = {
   activatedToast: "{name} est maintenant dans le jeu.",
   deactivatedToast: "{name} est sorti du jeu. Son archive est conservée.",
   activateFailed: "Impossible de changer ce mod : {reason}",
-  soundOverwriteToast: "A aussi remplacé des sons fournis par {names}.",
-  soundBankCount: "{n} fichiers son",
+  soundOverwriteToast: "A aussi remplacé de l'audio fourni par {names}.",
+  soundBankCount: "{n} fichiers audio",
   removeActiveTitle: "Désinstaller {name} ?",
   removeActiveBody:
-    "Ce mod est actuellement dans le jeu. Le désinstaller efface ses fichiers son ET son archive : rien n'est conservé. Désactive-le plutôt si tu veux garder l'archive.",
+    "Ce mod est actuellement dans le jeu. Le désinstaller efface ses fichiers audio ET son archive : rien n'est conservé. Désactive-le plutôt si tu veux garder l'archive.",
   chooseTitle: "Choisis ce qui entre dans le jeu",
   chooseAdditiveHelp: "Décoche ce dont tu ne veux pas.",
   chooseExclusiveHelp:
-    "Ces versions remplacent les mêmes fichiers son : une seule peut entrer.",
+    "Ces versions remplacent les mêmes fichiers audio : une seule peut entrer.",
   chooseRootGroup: "Fichiers de base",
   chooseNone: "Retiens au moins un élément.",
   // Mixeur : emplacements sonores. Les libellés se composent — véhicule +
   // aspect, ou famille + langue — donc on ne traduit que les morceaux.
   mixerTitle: "Mixeur audio",
   mixerHelp:
-    "Chaque ligne est un son que le jeu lit. Choisis quel mod téléchargé l'occupe, ou laisse-le au jeu.",
-  mixerEmpty: "Installe un mod son pour mélanger ses sons avec un autre.",
+    "Chaque ligne est un fichier audio que le jeu lit. Choisis quel mod téléchargé l'occupe, ou laisse-le au jeu.",
+  mixerEmpty: "Installe un mod audio pour le mélanger avec un autre.",
   mixerStock: "Son d'origine",
   mixerForeign: "Posé à la main",
   mixerRisky:
-    "C'est celui-là qui casse le son quand on le panache. Les auteurs demandent de garder le masterbank d'un seul mod.",
+    "C'est celui-là qui casse l'audio quand on le panache. Les auteurs demandent de garder le masterbank d'un seul mod.",
   mixerOccupied: "{n} sur {total} occupés",
   slotVehicle_tanks: "Chars",
   slotVehicle_aircraft: "Avions",
@@ -543,11 +545,11 @@ const fr: Record<Key, string> = {
   slot_hangar: "Hangar",
   overwriteWarnTitle: "Ça va recouvrir des mods déjà dans le jeu",
   overwriteWarnAll:
-    "{names} ne jouera plus rien : tous ses fichiers son sont remplacés. Désactive-le si tu ne veux pas le garder ainsi.",
+    "{names} ne jouera plus rien : tous ses fichiers audio sont remplacés. Désactive-le si tu ne veux pas le garder ainsi.",
   overwriteWarnSome:
-    "Des sons de {names} seront remplacés. Ces mods continuent de jouer tout le reste.",
+    "De l'audio de {names} sera remplacé. Ces mods continuent de jouer tout le reste.",
   overwriteWarnForeign:
-    "{n} fichiers son déjà présents dans sound/mod seront remplacés. L'application ne les a pas posés : elle ne sait pas de quel mod ils viennent, ni les remettre.",
+    "{n} fichiers audio déjà présents dans sound/mod seront remplacés. L'application ne les a pas posés : elle ne sait pas de quel mod ils viennent, ni les remettre.",
   sightVehicleCount: "{n} véhicules",
   installFailed: "Échec de l'installation : {reason}",
   uninstallFailed: "Échec de la désinstallation : {reason}",
@@ -578,7 +580,7 @@ const fr: Record<Key, string> = {
   E_NOT_INSTALLED:
     "Ce contenu n'est pas suivi comme installé par l'application : il n'a pas été touché.",
   E_NEEDS_CHOICE:
-    "Cette archive propose plusieurs versions des mêmes sons. Choisis-en une avant d'installer.",
+    "Cette archive propose plusieurs versions du même audio. Choisis-en une avant d'installer.",
   E_NO_LIBRARY: "L'application n'a pas su où conserver les archives téléchargées.",
   E_NO_CONFIG_BLK:
     "config.blk est absent. Lance War Thunder une fois pour qu'il le crée, puis réessaie.",
@@ -602,7 +604,8 @@ const ru: Record<Key, string> = {
   tabInstalled: "Установленные",
   soon: "Скоро",
   navSights: "Прицелы",
-  navSounds: "Звуковые моды",
+  navSounds: "Аудио",
+  tabAudioSettings: "Настройки аудио",
   gameFolder: "Папка игры",
   open: "Открыть",
   change: "Изменить",
@@ -757,7 +760,7 @@ const ru: Record<Key, string> = {
   installedToast: "«{name}» установлен.",
   uninstalledToast: "«{name}» удалён.",
   sightOverwriteToast: "Также заменены прицелы, используемые {names}.",
-  // Mods son
+  // Mods audio
   activate: "Включить",
   deactivate: "Отключить",
   activating: "Включение…",
@@ -767,26 +770,26 @@ const ru: Record<Key, string> = {
   activatedToast: "{name} теперь в игре.",
   deactivatedToast: "{name} убран из игры. Архив сохранён.",
   activateFailed: "Не удалось изменить этот мод: {reason}",
-  soundOverwriteToast: "Также заменены звуки из {names}.",
-  soundBankCount: "{n} звуковых файлов",
+  soundOverwriteToast: "Также заменено аудио из {names}.",
+  soundBankCount: "{n} аудиофайлов",
   removeActiveTitle: "Удалить {name}?",
   removeActiveBody:
-    "Этот мод сейчас в игре. Удаление сотрёт его звуковые файлы И архив: не останется ничего. Чтобы сохранить архив, просто отключите его.",
+    "Этот мод сейчас в игре. Удаление сотрёт его аудиофайлы И архив: не останется ничего. Чтобы сохранить архив, просто отключите его.",
   chooseTitle: "Выберите, что установить",
   chooseAdditiveHelp: "Снимите отметки с того, что не нужно.",
   chooseExclusiveHelp:
-    "Эти версии заменяют одни и те же звуковые файлы, поэтому подойдёт только одна.",
+    "Эти версии заменяют одни и те же аудиофайлы, поэтому подойдёт только одна.",
   chooseRootGroup: "Основные файлы",
   chooseNone: "Выберите хотя бы одну часть.",
   // Mixeur : emplacements sonores.
-  mixerTitle: "Звуковой микшер",
+  mixerTitle: "Аудиомикшер",
   mixerHelp:
-    "Каждая строка — один звук, который читает игра. Выберите, какой загруженный мод его занимает, или оставьте игре.",
-  mixerEmpty: "Установите звуковой мод, чтобы смешивать его звуки с другими.",
-  mixerStock: "Звук игры",
+    "Каждая строка — один аудиофайл, который читает игра. Выберите, какой загруженный мод его занимает, или оставьте игре.",
+  mixerEmpty: "Установите аудиомод, чтобы смешать его с другим.",
+  mixerStock: "Аудио игры",
   mixerForeign: "Положено вручную",
   mixerRisky:
-    "Именно он ломает звук при смешивании. Авторы просят оставлять masterbank одного мода.",
+    "Именно он ломает аудио при смешивании. Авторы просят оставлять masterbank одного мода.",
   mixerOccupied: "занято {n} из {total}",
   slotVehicle_tanks: "Танки",
   slotVehicle_aircraft: "Самолёты",
@@ -821,11 +824,11 @@ const ru: Record<Key, string> = {
   slot_hangar: "Ангар",
   overwriteWarnTitle: "Это перекроет моды, уже стоящие в игре",
   overwriteWarnAll:
-    "{names} замолчит: все его звуковые файлы будут заменены. Отключите его, если не хотите оставлять его в таком виде.",
+    "{names} замолчит: все его аудиофайлы будут заменены. Отключите его, если не хотите оставлять его в таком виде.",
   overwriteWarnSome:
-    "Часть звуков из {names} будет заменена. Остальное эти моды продолжат воспроизводить.",
+    "Часть аудио из {names} будет заменена. Остальное эти моды продолжат воспроизводить.",
   overwriteWarnForeign:
-    "{n} звуковых файлов, уже лежащих в sound/mod, будут заменены. Приложение их не размещало, поэтому не знает, какому моду они принадлежат, и не сможет их вернуть.",
+    "{n} аудиофайлов, уже лежащих в sound/mod, будут заменены. Приложение их не размещало, поэтому не знает, какому моду они принадлежат, и не сможет их вернуть.",
   sightVehicleCount: "{n} техники",
   installFailed: "Не удалось установить: {reason}",
   uninstallFailed: "Не удалось удалить: {reason}",
@@ -855,7 +858,7 @@ const ru: Record<Key, string> = {
   E_NOT_INSTALLED:
     "Приложение не считает это содержимое установленным, поэтому ничего не тронуло.",
   E_NEEDS_CHOICE:
-    "В архиве несколько версий одних и тех же звуков. Выберите одну перед установкой.",
+    "В архиве несколько версий одного и того же аудио. Выберите одну перед установкой.",
   E_NO_LIBRARY: "Приложение не определило, где хранить загруженные архивы.",
   E_NO_CONFIG_BLK:
     "Файл config.blk отсутствует. Запустите War Thunder один раз, чтобы он появился, и повторите.",
@@ -879,7 +882,8 @@ const zh: Record<Key, string> = {
   tabInstalled: "已安装",
   soon: "即将推出",
   navSights: "瞄准镜",
-  navSounds: "音效模组",
+  navSounds: "音频",
+  tabAudioSettings: "音频设置",
   gameFolder: "游戏文件夹",
   open: "打开",
   change: "更改",
@@ -1026,7 +1030,7 @@ const zh: Record<Key, string> = {
   installedToast: "已安装《{name}》。",
   uninstalledToast: "已移除《{name}》。",
   sightOverwriteToast: "同时替换了 {names} 使用的瞄准镜。",
-  // Mods son
+  // Mods audio
   activate: "启用",
   deactivate: "停用",
   activating: "正在启用…",
@@ -1036,23 +1040,23 @@ const zh: Record<Key, string> = {
   activatedToast: "{name} 已进入游戏。",
   deactivatedToast: "{name} 已移出游戏，压缩包已保留。",
   activateFailed: "无法更改此模组：{reason}",
-  soundOverwriteToast: "同时替换了 {names} 提供的音效。",
-  soundBankCount: "{n} 个音效文件",
+  soundOverwriteToast: "同时替换了 {names} 提供的音频。",
+  soundBankCount: "{n} 个音频文件",
   removeActiveTitle: "卸载 {name}？",
   removeActiveBody:
-    "该模组当前正在游戏中。卸载会删除它的音效文件和压缩包，不保留任何内容。若想保留压缩包，请改为停用。",
+    "该模组当前正在游戏中。卸载会删除它的音频文件和压缩包，不保留任何内容。若想保留压缩包，请改为停用。",
   chooseTitle: "选择要安装的内容",
   chooseAdditiveHelp: "取消勾选不需要的部分。",
-  chooseExclusiveHelp: "这些版本会替换相同的音效文件，只能选择其中一个。",
+  chooseExclusiveHelp: "这些版本会替换相同的音频文件，只能选择其中一个。",
   chooseRootGroup: "基础文件",
   chooseNone: "请至少保留一项。",
   // Mixeur : emplacements sonores.
-  mixerTitle: "音效混合器",
-  mixerHelp: "每一行是游戏读取的一个音效。选择由哪个已下载的模组占用，或保留游戏原声。",
-  mixerEmpty: "安装一个音效模组，即可与其他模组混搭。",
+  mixerTitle: "音频混合器",
+  mixerHelp: "每一行是游戏读取的一个音频文件。选择由哪个已下载的模组占用，或保留游戏原声。",
+  mixerEmpty: "安装一个音频模组，即可与其他模组混搭。",
   mixerStock: "游戏原声",
   mixerForeign: "手动放入",
-  mixerRisky: "混搭它正是音效损坏的原因。作者建议只保留单个模组的 masterbank。",
+  mixerRisky: "混搭它正是音频损坏的原因。作者建议只保留单个模组的 masterbank。",
   mixerOccupied: "已占用 {n} / {total}",
   slotVehicle_tanks: "坦克",
   slotVehicle_aircraft: "飞机",
@@ -1078,8 +1082,8 @@ const zh: Record<Key, string> = {
   slotFamily_crew_dialogs_naval: "舰船乘员语音",
   slotFamily_dialogs_chat: "无线电聊天",
   slotFamily_dialogs: "对话",
-  slot_masterbank: "主音效库",
-  "slot_masterbank.strings": "主音效库（文本）",
+  slot_masterbank: "主音频库",
+  "slot_masterbank.strings": "主音频库（文本）",
   slot_crew_dialogs_ground: "坦克乘员语音（通用）",
   slot_crew_dialogs_common: "乘员语音（通用）",
   slot_crew_dialogs_naval: "舰船乘员语音（通用）",
@@ -1087,10 +1091,10 @@ const zh: Record<Key, string> = {
   slot_hangar: "机库",
   overwriteWarnTitle: "这会覆盖游戏中已有的模组",
   overwriteWarnAll:
-    "{names} 将不再发出任何声音：它的音效文件会被全部替换。若不想保持这种状态，请停用它。",
-  overwriteWarnSome: "{names} 的部分音效会被替换。这些模组的其余音效仍会正常播放。",
+    "{names} 将不再发出任何声音：它的音频文件会被全部替换。若不想保持这种状态，请停用它。",
+  overwriteWarnSome: "{names} 的部分音频会被替换。这些模组的其余音频仍会正常播放。",
   overwriteWarnForeign:
-    "sound/mod 中已有的 {n} 个音效文件将被替换。这些文件不是本应用放入的，因此无法判断它们属于哪个模组，也无法恢复。",
+    "sound/mod 中已有的 {n} 个音频文件将被替换。这些文件不是本应用放入的，因此无法判断它们属于哪个模组，也无法恢复。",
   sightVehicleCount: "{n} 辆载具",
   installFailed: "安装失败：{reason}",
   uninstallFailed: "移除失败：{reason}",
@@ -1116,7 +1120,7 @@ const zh: Record<Key, string> = {
   E_BAD_ARGS: "应用发送了格式错误的请求，未做任何更改。",
   E_TOO_FAST: "同时打开的链接过多，请稍后再试。",
   E_NOT_INSTALLED: "本应用未将此内容记录为已安装，因此没有改动任何文件。",
-  E_NEEDS_CHOICE: "该压缩包提供了同一批音效的多个版本。请先选择一个再安装。",
+  E_NEEDS_CHOICE: "该压缩包提供了同一批音频的多个版本。请先选择一个再安装。",
   E_NO_LIBRARY: "应用未能确定下载的压缩包存放位置。",
   E_NO_CONFIG_BLK:
     "缺少 config.blk。请先启动一次《战争雷霆》让它生成该文件，然后重试。",

@@ -73,21 +73,29 @@ export function Mixer({
     return [...out.entries()].sort((a, b) => a[0].localeCompare(b[0], locale));
   }, [slots, t, locale]);
 
-  if (sounds.length === 0) return null;
-
   const occupied = (slots ?? []).filter((s) => s.owner !== null || s.foreign).length;
+  const empty = sounds.length === 0 || (slots !== null && slots.length === 0);
 
   return (
-    <section className="mixer">
-      <div className="more-head">
-        <h3>{t("mixerTitle")}</h3>
-        <span className="muted">
-          {slots ? t("mixerOccupied", { n: occupied, total: slots.length }) : ""}
-        </span>
+    <div className="content">
+      <div className="view-head">
+        <div>
+          <h2>{t("mixerTitle")}</h2>
+          <p>
+            {slots && !empty ? `${t("mixerOccupied", { n: occupied, total: slots.length })} · ` : ""}
+            {t("mixerHelp")}
+          </p>
+        </div>
       </div>
-      <p className="muted mixer-help">{t("mixerHelp")}</p>
 
-      {slots && slots.length === 0 && <p className="muted">{t("mixerEmpty")}</p>}
+      {/* Sans mod audio téléchargé, il n'y a aucune place à attribuer : on le
+          dit plutôt que d'afficher un tableau vide. */}
+      {empty && (
+        <div className="empty">
+          <p className="title">{t("mixerTitle")}</p>
+          <p className="muted">{t("mixerEmpty")}</p>
+        </div>
+      )}
 
       {groups.map(([group, rows]) => (
         <div key={group || "(general)"} className="mixer-group">
@@ -122,6 +130,6 @@ export function Mixer({
           ))}
         </div>
       ))}
-    </section>
+    </div>
   );
 }

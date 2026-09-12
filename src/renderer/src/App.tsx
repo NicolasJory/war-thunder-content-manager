@@ -7,11 +7,12 @@ import { IconDownload, IconFolder, IconInfo, IconSearch, IconSight, IconSound } 
 import { parseDeepLink } from "../../shared/deepLink";
 import { Favorites } from "./Favorites";
 import { Installed } from "./Installed";
+import { Mixer } from "./Mixer";
 import { Setup } from "./Setup";
 import { Brand, LanguageSwitch, ShellProvider, useShell } from "./shell";
 
 type Author = Skin["author"];
-type Tab = "browse" | "installed" | "favorites";
+type Tab = "browse" | "installed" | "favorites" | "audio";
 
 export default function App() {
   const [config, setConfig] = useState<WtConfigFile | null>(null);
@@ -250,6 +251,15 @@ function Shell({
             <IconSound size={16} />
             {t("navSounds")}
           </button>
+          {/* Les réglages audio ne sont pas du contenu à parcourir : ils disent
+              quel mod déjà téléchargé occupe quelle place dans le jeu. */}
+          <button
+            className={tab === "audio" && !author ? "nav-item active" : "nav-item"}
+            onClick={() => go("audio")}
+          >
+            <IconSound size={16} />
+            {t("tabAudioSettings")}
+          </button>
         </nav>
 
         <div className="rail-foot">
@@ -297,7 +307,12 @@ function Shell({
             onOpen={setOpenSkin}
             onTag={searchTag}
           />
-        ) : tab === "browse" ? null : tab === "favorites" ? (
+        ) : tab === "browse" ? null : tab === "audio" ? (
+          <Mixer
+            records={config.installed}
+            onRecords={(next) => onConfig({ ...config, installed: next })}
+          />
+        ) : tab === "favorites" ? (
           <Favorites
             favorites={config.favorites}
             onOpen={(f) => goTo(() => setAuthor({ id: f.id, nickname: f.nickname, avatar: f.avatar }))}
