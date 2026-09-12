@@ -67,21 +67,22 @@ export const IconSound = (p: Props) => (
 );
 
 /**
- * Réglages audio : un haut-parleur et trois curseurs.
+ * Réglages. Roue dentée nue : l'écran couvre l'audio et les raccourcis, plus
+ * seulement le son.
  *
- * Un engrenage avec un haut-parleur en médaillon avait été essayé d'abord :
- * propre en grand, illisible à 16 px, où le haut-parleur se réduit à un point.
- * Deux symboles ne tiennent pas dans seize pixels, c'est une limite du format.
- *
- * Les curseurs disent « réglages » aussi bien qu'une roue dentée, et mieux
- * encore ce que fait la page : attribuer chaque emplacement à un mod. Chacun
- * des deux symboles garde la place de se lire.
+ * Les dents PARTENT du cercle, sous son trait — détachées, on lisait un
+ * soleil. Le moyeu achève de la désigner. Un haut-parleur en médaillon avait
+ * été essayé d'abord : propre en grand, illisible à 16 px, où il se réduit à
+ * un point. Deux symboles ne tiennent pas dans seize pixels.
  */
-export const IconAudioSettings = (p: Props) => (
+export const IconGear = (p: Props) => (
   <Icon width={16} {...p}>
-    <path d="M84 100L128 60v136l-44-40H48v-56z" strokeLinejoin="round" />
-    <path d="M168 72h56M168 128h20M168 184h56" strokeLinecap="round" />
-    <circle cx="212" cy="128" r="16" />
+    <circle cx="128" cy="128" r="52" />
+    <circle cx="128" cy="128" r="18" />
+    <path
+      d="M180 128h32M128 180v32M91.2 164.8l-22.6 22.6M76 128H44M91.2 91.2L68.6 68.6M128 76V44M164.8 91.2l22.6-22.6M164.8 164.8l22.6 22.6"
+      strokeLinecap="round"
+    />
   </Icon>
 );
 

@@ -14,20 +14,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type InstalledRecord, type SoundSlot } from "./api";
 import { IconInfo } from "./icons";
-import { ShortcutField } from "./ShortcutField";
 import { slotLabel } from "./slotLabel";
 import { useShell } from "./shell";
 
 export function Mixer({
   records,
   onRecords,
-  shortcut,
-  onShortcut,
 }: {
   records: InstalledRecord[];
   onRecords: (records: InstalledRecord[]) => void;
-  shortcut: string;
-  onShortcut: (v: string) => void;
 }) {
   const { t, locale, notify, tError } = useShell();
   const [slots, setSlots] = useState<SoundSlot[] | null>(null);
@@ -79,33 +74,27 @@ export function Mixer({
   }, [slots, t, locale]);
 
   const occupied = (slots ?? []).filter((s) => s.owner !== null || s.foreign).length;
-  const empty = sounds.length === 0 || (slots !== null && slots.length === 0);
+  /*
+   * Vide = aucune place à montrer, pas « aucun mod téléchargé ».
+   *
+   * Les deux se confondaient, et le message « installe un mod audio »
+   * s'affichait au-dessus de lignes bien réelles : un joueur qui a extrait ses
+   * banques à la main n'a aucun mod suivi, mais ses emplacements sont occupés
+   * et les voir vaut la peine.
+   */
+  const empty = slots !== null && slots.length === 0;
 
   return (
-    <div className="content">
-      <div className="view-head">
-        <div>
-          <h2>{t("mixerTitle")}</h2>
-          <p>
-            {slots && !empty ? `${t("mixerOccupied", { n: occupied, total: slots.length })} · ` : ""}
-            {t("mixerHelp")}
-          </p>
-        </div>
-      </div>
-
-      {/* Le panneau flottant se règle ici : c'est la page des réglages, et son
-          raccourci est global, donc susceptible d'être déjà pris. */}
-      <section className="settings-block">
-        <ShortcutField value={shortcut} onSaved={onShortcut} />
-        {/* Fermer la fenêtre ne quitte plus : ça surprend si on ne le dit pas. */}
-        <p className="hint tray-hint">{t("closeToTrayHint")}</p>
-      </section>
+    <>
+      <p className="settings-lead">
+        {slots && !empty ? `${t("mixerOccupied", { n: occupied, total: slots.length })} · ` : ""}
+        {t("mixerHelp")}
+      </p>
 
       {/* Sans mod audio téléchargé, il n'y a aucune place à attribuer : on le
           dit plutôt que d'afficher un tableau vide. */}
       {empty && (
         <div className="empty">
-          <p className="title">{t("mixerTitle")}</p>
           <p className="muted">{t("mixerEmpty")}</p>
         </div>
       )}
@@ -143,6 +132,6 @@ export function Mixer({
           ))}
         </div>
       ))}
-    </div>
+    </>
   );
 }

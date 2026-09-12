@@ -4,7 +4,7 @@ import { AuthorView } from "./AuthorView";
 import { Browse } from "./Browse";
 import { Detail } from "./Detail";
 import {
-  IconAudioSettings,
+  IconGear,
   IconDownload,
   IconFolder,
   IconInfo,
@@ -15,7 +15,7 @@ import {
 import { parseDeepLink } from "../../shared/deepLink";
 import { Favorites } from "./Favorites";
 import { Installed } from "./Installed";
-import { Mixer } from "./Mixer";
+import { Settings } from "./Settings";
 import { Setup } from "./Setup";
 import { Brand, LanguageSwitch, ShellProvider, useShell } from "./shell";
 
@@ -269,8 +269,8 @@ function Shell({
             className={tab === "audio" && !author ? "nav-item active" : "nav-item"}
             onClick={() => go("audio")}
           >
-            <IconAudioSettings size={16} />
-            {t("tabAudioSettings")}
+            <IconGear size={16} />
+            {t("tabSettings")}
           </button>
           <button
             className={tab === "installed" ? "nav-item active" : "nav-item"}
@@ -344,11 +344,11 @@ function Shell({
             onTag={searchTag}
           />
         ) : tab === "browse" ? null : tab === "audio" ? (
-          <Mixer
+          <Settings
             records={config.installed}
             onRecords={(next) => onConfig({ ...config, installed: next })}
             shortcut={config.overlayShortcut}
-            onShortcut={(v) => onConfig({ ...config, overlayShortcut: v })}
+            onShortcut={(v: string) => onConfig({ ...config, overlayShortcut: v })}
           />
         ) : tab === "favorites" ? (
           <Favorites
