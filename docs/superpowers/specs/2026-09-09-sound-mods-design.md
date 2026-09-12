@@ -117,11 +117,20 @@ Règle : le dernier activé gagne le fichier. `meta.activatedAt` donne l'ordre.
 Le mod recouvert reste actif pour tous ses autres fichiers.
 
 L'avertissement arrive **avant** l'action, pas après. La boîte d'installation
-compare les banques que la sélection va poser à celles des mods déjà en
-service, et le dit — avant de lancer 850 Mo de téléchargement. Décocher le
-groupe fautif fait disparaître l'avertissement. Même chose sur le bouton
-d'activation d'un mod déjà téléchargé, où le calcul se fait sans réseau : le
-record garde la liste de ce qu'il avait posé.
+compare les banques que la sélection va poser à celles déjà en service, et le
+dit — avant de lancer 850 Mo de téléchargement. Décocher le groupe fautif fait
+disparaître l'avertissement. Même chose sur le bouton d'activation d'un mod
+déjà téléchargé.
+
+Il regarde **deux sources**, et la seconde n'est pas un détail. Se fier aux
+seuls enregistrements rendait l'avertissement aveugle à tout ce qui n'était pas
+passé par l'application. Le cas est arrivé sur l'installation de test : OPEX
+5.0.0 extrait à la main, seize banques dans `sound/mod`, aucun enregistrement
+pour en parler. Installer RTCM par-dessus aurait remplacé trois de ses banques
+en silence. `listForeignBanks` lit donc le dossier et retire ce que
+l'application revendique ; le reste appartient à quelqu'un d'autre. On le
+signale sans pouvoir le nommer, et on n'y touche jamais — même contrat que
+`listForeign` pour les camouflages.
 
 Deux formulations, parce que l'écart compte. Un mod qui perd quelques banques
 continue de jouer le reste ; un mod qui les perd toutes est muet, et lui dire
@@ -238,8 +247,9 @@ banque du premier au lieu de laisser un trou. Sans ça, désactiver un mod
 casserait celui du dessous en silence.
 
 `coveredBy` a ses propres checks : recouvrement partiel, total, casse
-différente, mod inactif, réinstallation de soi-même, et plusieurs mods touchés
-d'un coup.
+différente, mod inactif, réinstallation de soi-même, plusieurs mods touchés
+d'un coup, et les banques posées hors de l'application — dont le cas qui
+prouve la régression réparée, « sans la liste du disque : aveugle ».
 
 Vérifié en plus dans l'application réelle, sur `Yuka_vws_2.0` : l'écran de choix
 s'affiche avec ses trois variantes, cocher l'une décoche les autres, les banques
@@ -250,6 +260,12 @@ la réactivation ne retélécharge rien.
 Et sur deux mods réels qui se disputent `crew_dialogs_common.bank` (`TR_5+`
 puis `Ooarai`) : le premier n'affiche rien, le second annonce le recouvrement
 avant le téléchargement.
+
+Enfin contre une installation réelle où OPEX 5.0.0 avait été extrait à la main :
+l'application annonce « 3 fichiers son déjà présents dans sound/mod seront
+remplacés » avant d'installer RTCM. Les trois ont été recoupés à part, en
+croisant l'index du zip de RTCM avec le contenu du dossier — ce sont les
+dialogues d'équipage allemand, anglais US et français.
 
 ## Annexe : les 20 archives relevées
 

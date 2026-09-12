@@ -21,6 +21,7 @@ import { tmpdir } from "os";
 import path from "path";
 import {
   getInstaller,
+  listForeignBanks,
   setLibraryDir,
   type InstalledRecord,
   type Skin,
@@ -218,6 +219,67 @@ async function main() {
     "config.blk revient à son état d'origine"
   );
   ok("désinstaller un mod actif : banques, archive et ligne de config partent ensemble");
+
+  // ------------------------- Banques posées hors de l'application ------------------------- //
+  //
+  // Le cas rencontré en vrai : un joueur qui extrayait ses mods à la main avant
+  // d'avoir l'application. Ces banques doivent être VUES — sinon l'avertissement
+  // de recouvrement est aveugle — et JAMAIS touchées, elles ne sont pas à nous.
+
+  // Deux banques posées à la main, comme après une extraction de zip.
+  config.installed = [];
+  await writeFile(path.join(modDir, "masterbank.bank"), "pose a la main");
+  await writeFile(path.join(modDir, "tanks_engines.bank"), "pose a la main");
+
+  assert.deepEqual(await listForeignBanks(config), ["masterbank.bank", "tanks_engines.bank"]);
+  ok("banques posées à la main : vues par listForeignBanks");
+
+  // Un mod à nous par-dessus : sa banque sort de la liste, l'autre y reste.
+  await makeZip(path.join(library, "sound", "303.zip"), { "masterbank.bank": "banque de C" });
+  let recordC = await installer.setActive(
+    {
+      contentType: "sound",
+      lang_group: 303,
+      path: modDir,
+      name: "Mod C",
+      installedAt: Date.now(),
+      meta: {
+        files: [],
+        groups: [""],
+        active: false,
+        activatedAt: 0,
+        addedEnableMod: false,
+        overwrites: [],
+        zip: path.join(library, "sound", "303.zip"),
+      },
+    } as InstalledRecord,
+    true,
+    config
+  );
+  config.installed = [recordC];
+  assert.deepEqual(
+    await listForeignBanks(config),
+    ["tanks_engines.bank"],
+    "masterbank est désormais à nous, tanks_engines ne l'est pas"
+  );
+  ok("après notre pose : seules les banques encore étrangères restent listées");
+
+  // Un mod sorti du jeu ne revendique plus rien : ce qui porte son nom sur le
+  // disque n'est plus le sien.
+  recordC = await installer.setActive(recordC, false, config);
+  config.installed = [recordC];
+  await writeFile(path.join(modDir, "masterbank.bank"), "remis a la main");
+  assert.deepEqual(await listForeignBanks(config), ["masterbank.bank", "tanks_engines.bank"]);
+  ok("mod désactivé : ce qui reste sur le disque redevient étranger");
+
+  // Le contrat : on les liste, on ne les efface jamais.
+  await installer.uninstall(recordC, config);
+  assert.deepEqual(
+    (await readdir(modDir)).sort(),
+    ["masterbank.bank", "tanks_engines.bank"],
+    "une désinstallation ne doit pas emporter ce que nous n'avons pas posé"
+  );
+  ok("désinstallation : les banques étrangères restent intactes");
 
   await rm(root, { recursive: true, force: true });
   console.log(`\n${passed} checks OK — cycle de vie du son complet\n`);

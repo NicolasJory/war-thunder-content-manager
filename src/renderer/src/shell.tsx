@@ -21,6 +21,7 @@ import {
 import {
   api,
   coveredBy,
+  coversSomething,
   formatSize,
   isActive,
   setPages,
@@ -28,6 +29,7 @@ import {
   suggestName,
   type ArchiveChoice,
   type Covered,
+  type CoverReport,
   type ContentType,
   type InstalledRecord,
   type Progress,
@@ -68,6 +70,8 @@ interface Shell {
   toasts: Toast[];
 
   installed: InstalledRecord[];
+  /** Banques de `sound/mod` que l'application n'a pas posées. */
+  foreignBanks: string[];
   recordFor: (langGroup: number) => InstalledRecord | undefined;
   /** Ouvre la boîte de renommage puis installe. */
   requestInstall: (skin: Skin) => void;
@@ -115,9 +119,29 @@ export function ShellProvider({
   // second clic dans la même salve d'événements.
   const busyRef = useRef<number | null>(null);
   const [busyGroup, setBusyGroup] = useState<number | null>(null);
+  /**
+   * Banques de `sound/mod` posées hors de l'application.
+   *
+   * Relu à chaque changement de la liste installée, donc après chaque pose ou
+   * retrait : une banque qu'on vient de poser cesse aussitôt d'être étrangère.
+   */
+  const [foreignBanks, setForeignBanks] = useState<string[]>([]);
   const [progress, setProgress] = useState<Progress | null>(null);
 
   const t = useMemo(() => translator(lang), [lang]);
+
+  useEffect(() => {
+    let alive = true;
+    api.content
+      .foreignBanks()
+      .then((list) => alive && setForeignBanks(list))
+      // Dossier de jeu pas encore configuré, ou disque indisponible :
+      // l'avertissement sera moins complet, rien de plus. Ça ne bloque rien.
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [installed]);
 
   // Le main emet des codes stables ("E_DOWNLOAD: 404"), jamais du texte : on
   // traduit le code et on garde le detail brut, qui n'a pas a etre traduit.
@@ -324,6 +348,7 @@ export function ShellProvider({
     notify,
     toasts,
     installed,
+    foreignBanks,
     recordFor,
     requestInstall: (skin: Skin) => busyRef.current === null && setPendingSkin(skin),
     uninstall,
@@ -472,7 +497,7 @@ function InstallDialog({
   onCancel: () => void;
   onConfirm: (name: string, groups?: string[]) => void;
 }) {
-  const { t, installed } = useShell();
+  const { t, installed, foreignBanks } = useShell();
   const [name, setName] = useState(() => suggestName(skin));
   const [choice, setChoice] = useState<ArchiveChoice | null>(null);
   // Seul le son a des archives à plusieurs dossiers : inutile de faire deux
@@ -555,12 +580,11 @@ function InstallDialog({
    * l'information utile.
    */
   const covered = useMemo(() => {
-    if (!choice) return [];
-    const files = choice.groups
+    const files = (choice?.groups ?? [])
       .filter((g) => selected.includes(g.dir))
       .flatMap((g) => g.files);
-    return coveredBy(files, installed, skin.lang_group);
-  }, [choice, selected, installed, skin.lang_group]);
+    return coveredBy(files, installed, skin.lang_group, foreignBanks);
+  }, [choice, selected, installed, foreignBanks, skin.lang_group]);
 
   const trimmed = name.trim();
   // Le main réassainit de toute façon ; ici on prévient juste avant de cliquer.
@@ -782,19 +806,24 @@ function Progress({
  * Deux formulations, parce que l'écart compte : un mod qui perd quelques
  * banques continue de jouer, un mod qui les perd toutes est muet.
  */
-function OverwriteWarning({ covered }: { covered: Covered[] }) {
+function OverwriteWarning({ covered }: { covered: CoverReport }) {
   const { t } = useShell();
-  if (covered.length === 0) return null;
+  if (!coversSomething(covered)) return null;
 
   const names = (list: Covered[]) => list.map((c) => c.name).join(", ");
-  const total = covered.filter((c) => c.total);
-  const partial = covered.filter((c) => !c.total);
+  const total = covered.mods.filter((c) => c.total);
+  const partial = covered.mods.filter((c) => !c.total);
 
   return (
     <div className="overwrite-warn">
       <p className="overwrite-title">{t("overwriteWarnTitle")}</p>
       {total.length > 0 && <p>{t("overwriteWarnAll", { names: names(total) })}</p>}
       {partial.length > 0 && <p>{t("overwriteWarnSome", { names: names(partial) })}</p>}
+      {/* Sans nom à donner : ces banques étaient là avant l'application, ou
+          viennent d'une extraction faite à la main. */}
+      {covered.foreign.length > 0 && (
+        <p>{t("overwriteWarnForeign", { n: covered.foreign.length })}</p>
+      )}
     </div>
   );
 }
@@ -810,7 +839,7 @@ function OverwriteWarning({ covered }: { covered: Covered[] }) {
  * dupliquer la bascule aurait fait deux endroits à corriger.
  */
 export function SoundState({ record }: { record: InstalledRecord }) {
-  const { t, setActive, busyGroup, installed } = useShell();
+  const { t, setActive, busyGroup, installed, foreignBanks } = useShell();
   const meta = soundMeta(record);
   const busy = busyGroup === record.lang_group;
   const active = isActive(record);
@@ -818,8 +847,14 @@ export function SoundState({ record }: { record: InstalledRecord }) {
   // Ce que l'activation recouvrirait. Les banques sont connues sans réseau :
   // le record garde la liste de ce qu'il avait posé, et il reposera la même.
   const covered = useMemo(
-    () => (active ? [] : coveredBy(meta?.files ?? [], installed, record.lang_group)),
-    [active, meta, installed, record.lang_group]
+    () =>
+      coveredBy(
+        active ? [] : meta?.files ?? [],
+        installed,
+        record.lang_group,
+        active ? [] : foreignBanks
+      ),
+    [active, meta, installed, foreignBanks, record.lang_group]
   );
 
   return (

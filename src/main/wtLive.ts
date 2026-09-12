@@ -1296,6 +1296,42 @@ async function deactivateSound(record: InstalledRecord, config: WtConfig): Promi
   if (stillActive.length === 0 && meta.addedEnableMod) await setEnableMod(config, false);
 }
 
+/**
+ * Banques présentes dans `sound/mod` que l'application n'a pas posées.
+ *
+ * Un joueur qui extrayait ses mods à la main avant d'avoir l'application en a
+ * forcément : sur l'installation de test, OPEX 5.0.0 occupait ses seize
+ * banques sans qu'aucun enregistrement ne le mentionne. Sans cette lecture,
+ * l'avertissement de recouvrement est aveugle à tout ce qui n'est pas passé
+ * par nous, et l'auteur de PCSM prévient précisément de ce piège : deux mods
+ * qui se disputent `masterbank.bank` ne cohabitent pas.
+ *
+ * Pendant de `listForeign` pour les camouflages, à ceci près que l'unité est le
+ * fichier et non le dossier : le jeu lit `sound/mod` à plat.
+ *
+ * On les liste, on ne les touche jamais. Ce qu'on n'a pas posé ne nous
+ * appartient pas.
+ */
+export async function listForeignBanks(config: WtConfig): Promise<string[]> {
+  const dest = await soundInstaller.resolveDestination(config);
+  const ours = new Set(
+    config.installed
+      .filter((r) => r.contentType === "sound" && soundMeta(r)?.active)
+      .flatMap((r) => soundMeta(r).files)
+      .map((f) => f.toLowerCase())
+  );
+
+  try {
+    const entries = await fs.readdir(dest, { withFileTypes: true });
+    return entries
+      .filter((e) => e.isFile() && !ours.has(e.name.toLowerCase()))
+      .map((e) => e.name)
+      .sort((a, b) => a.localeCompare(b));
+  } catch {
+    return []; // dossier absent : aucun mod son posé, par nous ou par quiconque
+  }
+}
+
 export const soundInstaller: Installer = {
   contentType: "sound",
 

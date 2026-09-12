@@ -74,6 +74,7 @@ interface Api {
     cancelInstall(id: number): Promise<boolean>;
     refreshInstalled(): Promise<InstalledRecord[]>;
     foreign(): Promise<ForeignFolder[]>;
+    foreignBanks(): Promise<string[]>;
     onProgress(cb: (p: Progress) => void): () => void;
   };
   vehicleFont(): Promise<string | null>;
@@ -138,33 +139,54 @@ export interface Covered {
   total: boolean;
 }
 
+export interface CoverReport {
+  /** Mods que l'application suit, avec le nom qu'elle leur connaît. */
+  mods: Covered[];
+  /**
+   * Banques recouvertes que l'application n'a pas posées. Pas de nom à donner :
+   * on sait seulement qu'un fichier était là et qu'il ne le sera plus.
+   */
+  foreign: string[];
+}
+
 /**
- * Mods son actifs qu'une pose de `files` recouvrirait.
+ * Ce qu'une pose de `files` recouvrirait dans `sound/mod`.
  *
- * Le jeu ne lit qu'un fichier par nom dans `sound/mod` : poser
- * `masterbank.bank` par-dessus celui d'un autre mod le remplace. L'autre reste
- * actif pour ses banques restantes, sauf si on les prend toutes — auquel cas il
- * ne joue plus rien, et le dire « remplace quelques sons » serait mentir.
+ * Le jeu ne lit qu'un fichier par nom : poser `masterbank.bank` par-dessus
+ * celui d'un autre mod le remplace. L'autre reste actif pour ses banques
+ * restantes, sauf si on les prend toutes — auquel cas il ne joue plus rien, et
+ * le dire « remplace quelques sons » serait mentir.
+ *
+ * Deux sources, parce que se fier à la seule mémoire de l'application rendait
+ * l'avertissement aveugle : un joueur qui extrayait ses mods à la main avant
+ * d'avoir l'application a des banques dont aucun enregistrement ne parle.
+ * `foreignBanks` vient du disque et comble ce trou.
  *
  * Sert avant l'action, dans la boîte d'installation et sur le bouton d'activation.
  */
 export function coveredBy(
   files: string[],
   installed: InstalledRecord[],
-  exceptGroup?: number
-): Covered[] {
+  exceptGroup?: number,
+  foreignBanks: string[] = []
+): CoverReport {
   const laid = new Set(files.map((f) => f.toLowerCase()));
-  const out: Covered[] = [];
+  const mods: Covered[] = [];
 
   for (const record of installed) {
     if (record.lang_group === exceptGroup || !isActive(record)) continue;
     const theirs = soundMeta(record)?.files ?? [];
     if (theirs.length === 0) continue;
     const hit = theirs.filter((f) => laid.has(f.toLowerCase()));
-    if (hit.length > 0) out.push({ name: record.name, total: hit.length === theirs.length });
+    if (hit.length > 0) mods.push({ name: record.name, total: hit.length === theirs.length });
   }
-  return out;
+
+  return { mods, foreign: foreignBanks.filter((f) => laid.has(f.toLowerCase())) };
 }
+
+/** Y a-t-il quelque chose à signaler ? Évite de tester deux listes partout. */
+export const coversSomething = (r: CoverReport): boolean =>
+  r.mods.length > 0 || r.foreign.length > 0;
 
 export interface ForeignFolder {
   name: string;

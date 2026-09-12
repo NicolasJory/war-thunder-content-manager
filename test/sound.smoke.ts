@@ -19,7 +19,7 @@ import {
   soundEntriesFor,
   targetName,
 } from "../src/main/soundLayout.js";
-import { coveredBy } from "../src/renderer/src/api.js";
+import { coversSomething, coveredBy } from "../src/renderer/src/api.js";
 import type { InstalledRecord } from "../src/main/wtLive.js";
 
 let passed = 0;
@@ -387,7 +387,7 @@ const REAL = [
   ok("accolade jamais refermée : aucun retrait tenté");
 }
 
-// ------------------------- Recouvrement d'un mod actif ------------------------- //
+// ------------------------- Recouvrement ------------------------- //
 
 console.log("\nAvertissement de recouvrement");
 
@@ -414,37 +414,82 @@ const soundRecord = (
 
   // Une banque commune : RCSM perd masterbank, garde ses moteurs.
   const partiel = coveredBy(["masterbank.bank"], installed);
-  assert.deepEqual(partiel, [{ name: "RCSM", total: false }]);
+  assert.deepEqual(partiel.mods, [{ name: "RCSM", total: false }]);
+  assert.equal(coversSomething(partiel), true);
   ok("recouvrement partiel : le mod est nommé, marqué non-total");
 
   // Toutes ses banques : RCSM ne jouerait plus rien.
   const complet = coveredBy(["masterbank.bank", "tanks_engines.bank"], installed);
-  assert.deepEqual(complet, [{ name: "RCSM", total: true }]);
+  assert.deepEqual(complet.mods, [{ name: "RCSM", total: true }]);
   ok("recouvrement complet : marqué total, la phrase changera");
 
   // La casse ne doit pas faire manquer un conflit : Windows ne distingue pas.
-  assert.deepEqual(coveredBy(["MasterBank.bank"], installed), [{ name: "RCSM", total: false }]);
+  assert.deepEqual(coveredBy(["MasterBank.bank"], installed).mods, [{ name: "RCSM", total: false }]);
   ok("recouvrement repéré malgré une casse différente");
 
   // Un mod téléchargé mais sorti du jeu ne peut rien perdre.
-  assert.deepEqual(coveredBy(["masterbank.bank"], [dormant]), []);
+  assert.deepEqual(coveredBy(["masterbank.bank"], [dormant]).mods, []);
   ok("mod inactif : jamais signalé, il n'est pas dans le jeu");
 
   // On ne se signale pas soi-même lors d'une réinstallation.
-  assert.deepEqual(coveredBy(["masterbank.bank"], installed, 1), []);
+  assert.deepEqual(coveredBy(["masterbank.bank"], installed, 1).mods, []);
   ok("réinstallation du même mod : il ne se recouvre pas lui-même");
 
   // Aucun nom en commun : rien à dire.
-  assert.deepEqual(coveredBy(["hangar.bank"], installed), []);
+  const rien = coveredBy(["hangar.bank"], installed);
+  assert.equal(coversSomething(rien), false);
   ok("aucune banque commune : aucun avertissement");
 
   // Plusieurs mods touchés d'un coup, chacun avec son verdict.
   const deux = coveredBy(["masterbank.bank", "tanks_engines.bank", "aircraft_guns.bank"], installed);
-  assert.deepEqual(deux, [
+  assert.deepEqual(deux.mods, [
     { name: "RCSM", total: true },
     { name: "Free-Bird", total: true },
   ]);
   ok("plusieurs mods touchés : chacun rend son propre verdict");
+}
+
+// ------------------------- Banques posées hors de l'application ------------------------- //
+//
+// Le cas rencontré sur l'installation de test : OPEX 5.0.0 extrait a la main,
+// seize banques dans sound/mod, aucun enregistrement pour en parler. Sans cette
+// source, l'avertissement ne voyait rien et l'ecrasement se faisait en silence.
+
+console.log("\nBanques posées hors de l'application");
+
+{
+  // Les quatre premieres banques reelles d'OPEX 5.0.0, relevees sur le disque.
+  const opex = [
+    "masterbank.bank",
+    "masterbank.strings.bank",
+    "tanks_engines.bank",
+    "_crew_dialogs_ground_fr.assets.bank",
+  ];
+
+  const seul = coveredBy(["masterbank.bank"], [], undefined, opex);
+  assert.deepEqual(seul.mods, []);
+  assert.deepEqual(seul.foreign, ["masterbank.bank"]);
+  assert.equal(coversSomething(seul), true);
+  ok("aucun mod suivi, mais une banque étrangère : signalé quand même");
+
+  // Sans la liste du disque, l'ancien comportement : rien du tout.
+  assert.equal(coversSomething(coveredBy(["masterbank.bank"], [])), false);
+  ok("sans la liste du disque : aveugle, c'est ce que ce correctif répare");
+
+  // Les deux sources cohabitent et restent distinctes.
+  const rcsm = soundRecord(1, "RCSM", ["tanks_engines.bank"], true);
+  const deux = coveredBy(["masterbank.bank", "tanks_engines.bank"], [rcsm], undefined, opex);
+  assert.deepEqual(deux.mods, [{ name: "RCSM", total: true }]);
+  assert.deepEqual(deux.foreign, ["masterbank.bank", "tanks_engines.bank"]);
+  ok("mod suivi et banques étrangères : les deux sont rapportés séparément");
+
+  // Casse, ici aussi.
+  assert.deepEqual(coveredBy(["MASTERBANK.BANK"], [], undefined, opex).foreign, ["masterbank.bank"]);
+  ok("banque étrangère repérée malgré une casse différente");
+
+  // Une banque étrangère qu'on ne touche pas n'a rien à faire dans le rapport.
+  assert.deepEqual(coveredBy(["hangar.bank"], [], undefined, opex).foreign, []);
+  ok("banque étrangère non touchée : pas signalée");
 }
 
 console.log(`\n${passed} checks OK\n`);

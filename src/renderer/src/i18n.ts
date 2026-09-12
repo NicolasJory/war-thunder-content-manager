@@ -224,6 +224,8 @@ const en = {
     "{names} would go silent: every one of its sound files gets replaced. Deactivate it if you would rather not keep it that way.",
   overwriteWarnSome:
     "Some sounds from {names} get replaced. Those mods keep playing everything else.",
+  overwriteWarnForeign:
+    "{n} sound files already in sound/mod get replaced. The app did not put them there, so it cannot say which mod they belong to or put them back.",
   sightVehicleCount: "{n} vehicles",
   installFailed: "Install failed: {reason}",
   uninstallFailed: "Removal failed: {reason}",
@@ -460,6 +462,8 @@ const fr: Record<Key, string> = {
     "{names} ne jouera plus rien : tous ses fichiers son sont remplacés. Désactive-le si tu ne veux pas le garder ainsi.",
   overwriteWarnSome:
     "Des sons de {names} seront remplacés. Ces mods continuent de jouer tout le reste.",
+  overwriteWarnForeign:
+    "{n} fichiers son déjà présents dans sound/mod seront remplacés. L'application ne les a pas posés : elle ne sait pas de quel mod ils viennent, ni les remettre.",
   sightVehicleCount: "{n} véhicules",
   installFailed: "Échec de l'installation : {reason}",
   uninstallFailed: "Échec de la désinstallation : {reason}",
@@ -695,6 +699,8 @@ const ru: Record<Key, string> = {
     "{names} замолчит: все его звуковые файлы будут заменены. Отключите его, если не хотите оставлять его в таком виде.",
   overwriteWarnSome:
     "Часть звуков из {names} будет заменена. Остальное эти моды продолжат воспроизводить.",
+  overwriteWarnForeign:
+    "{n} звуковых файлов, уже лежащих в sound/mod, будут заменены. Приложение их не размещало, поэтому не знает, какому моду они принадлежат, и не сможет их вернуть.",
   sightVehicleCount: "{n} техники",
   installFailed: "Не удалось установить: {reason}",
   uninstallFailed: "Не удалось удалить: {reason}",
@@ -919,6 +925,8 @@ const zh: Record<Key, string> = {
   overwriteWarnAll:
     "{names} 将不再发出任何声音：它的音效文件会被全部替换。若不想保持这种状态，请停用它。",
   overwriteWarnSome: "{names} 的部分音效会被替换。这些模组的其余音效仍会正常播放。",
+  overwriteWarnForeign:
+    "sound/mod 中已有的 {n} 个音效文件将被替换。这些文件不是本应用放入的，因此无法判断它们属于哪个模组，也无法恢复。",
   sightVehicleCount: "{n} 辆载具",
   installFailed: "安装失败：{reason}",
   uninstallFailed: "移除失败：{reason}",

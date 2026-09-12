@@ -41,6 +41,8 @@ const api = {
     cancelInstall: (id: number) => ipcRenderer.invoke("content:cancelInstall", id),
     refreshInstalled: () => ipcRenderer.invoke("content:refreshInstalled"),
     foreign: () => ipcRenderer.invoke("content:foreign"),
+    /** Banques de `sound/mod` que l'application n'a pas posées. */
+    foreignBanks: () => ipcRenderer.invoke("content:foreignBanks"),
 
     // On n'expose pas ipcRenderer : juste un abonnement à CE canal, avec sa
     // fonction de désabonnement. Le renderer ne peut pas écouter autre chose.

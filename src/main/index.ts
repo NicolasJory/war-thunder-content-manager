@@ -44,6 +44,7 @@ import {
   setVehicleIds,
   getInstaller,
   listForeign,
+  listForeignBanks,
   type ContentType,
   type InstalledRecord,
   type InstallProgress,
@@ -523,6 +524,15 @@ function registerIpc() {
   });
 
   ipcMain.handle("content:foreign", async () => listForeign(await requireGameDir()));
+
+  /**
+   * Banques posées dans `sound/mod` sans passer par l'application.
+   *
+   * Le renderer s'en sert pour prévenir d'un recouvrement : sans elles,
+   * l'avertissement ne voit que ce que l'application se souvient d'avoir posé,
+   * donc rien d'une installation faite à la main.
+   */
+  ipcMain.handle("content:foreignBanks", async () => listForeignBanks(await requireGameDir()));
 
   ipcMain.handle("shell:openSkinsFolder", async () => {
     const cfg = await requireGameDir();
