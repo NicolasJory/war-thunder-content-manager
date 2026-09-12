@@ -315,10 +315,10 @@ async function main() {
 
     // 4. Les langues non latines doivent vraiment etre traduites, pas recopiees
     //    de l'anglais. On tolere les noms propres et les termes techniques.
-    const exempts = new Set<string>([
-      "appName", "brandTop", "brandBottom", "monogram", "hashtagPlaceholder",
-      "openSkinsFolder", "downloadProgress",
-    ]);
+    // Noms propres et gabarits sans mot a traduire. Une cle retiree du
+    // dictionnaire doit sortir d'ici aussi : trois noms y survivaient a leur
+    // cle, et une exemption sans cle ne protege plus rien.
+    const exempts = new Set<string>(["brandTop", "brandBottom", "monogram", "hashtagPlaceholder"]);
     for (const lang of ["ru", "zh"] as const) {
       const identiques = enKeys.filter(
         (k) => !exempts.has(k) && DICTS[lang][k] === DICTS.en[k]

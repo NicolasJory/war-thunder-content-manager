@@ -27,7 +27,6 @@ export const LANGS = [
 export type Lang = (typeof LANGS)[number]["code"];
 
 const en = {
-  appName: "War Thunder Content Manager",
   brandTop: "War Thunder",
   brandBottom: "Content Manager",
   monogram: "WT",
@@ -35,25 +34,20 @@ const en = {
 
   // Barre latérale
   tabInstalled: "Installed",
-  soon: "Soon",
   navSights: "Sights",
   navSounds: "Audio",
   tabAudioSettings: "Audio settings",
   gameFolder: "Game folder",
   open: "Open",
   change: "Change",
-  openSkinsFolder: "Open UserSkins",
-  changeFolder: "Change folder",
   language: "Language",
 
   // Installation
   install: "Install",
-  installing: "Installing…",
   uninstall: "Uninstall",
   uninstalling: "Removing…",
   downloading: "Downloading",
   extracting: "Extracting",
-  storing: "Storing in UserSkins",
   installTitle: "Install this camouflage",
   installNamed: "Install {name}",
   installNameLabel: "Folder name",
@@ -87,8 +81,6 @@ const en = {
   noResults: "No results",
   noResultsHashtag: "This hashtag may not exist. Vehicle filters are more reliable.",
   noResultsFilters: "Try widening the filters.",
-  previous: "Previous",
-  next: "Next",
   page: "Page {n}",
   endOfList: "End of the list.",
   removeFilter: "Clear this filter",
@@ -114,13 +106,9 @@ const en = {
   viewOnLive: "View on WT Live",
   localOnly: "Installed locally, visible to you alone. Nothing is sent to the game server.",
   otherCreations: "More by author",
-  loadingCreations: "Loading this author's creations…",
-  noOtherCreations: "No other camouflage by this author.",
   uploadedOn: "uploaded {date}",
 
   // Auteur
-  byAuthor: "Camouflages by {name}",
-  authorPage: "See author page",
   backToBrowse: "Back to browsing",
   authorEmpty: "This author has no camouflage on this page.",
   authorNote:
@@ -179,14 +167,12 @@ const en = {
   externalOpen: "Open in browser",
 
   // Configuration
-  firstRun: "First run",
   setupTitle: "Where is War Thunder installed?",
   setupIntro:
     "Point to the root folder of the game. Camouflages are installed into its UserSkins subfolder.",
   setupField: "Game folder",
   browse: "Browse…",
   detecting: "Looking for the installation through Steam…",
-  foundViaSteam: "Found through Steam. Destination:",
   skinsDestination: "Camouflages will go to",
   checking: "Checking…",
   continueLabel: "Continue",
@@ -199,7 +185,7 @@ const en = {
   retry: "Retry",
   installedToast: "{name} installed.",
   uninstalledToast: "{name} removed.",
-  sightOverwriteToast: "Also replaced reticles used by {names}.",
+  sightOverwriteToast: "Reticles used by {names} were replaced too.",
   // Mods audio
   activate: "Activate",
   deactivate: "Deactivate",
@@ -210,7 +196,7 @@ const en = {
   activatedToast: "{name} is now in the game.",
   deactivatedToast: "{name} taken out of the game. Its archive is kept.",
   activateFailed: "Could not change this mod: {reason}",
-  soundOverwriteToast: "Also replaced audio provided by {names}.",
+  soundOverwriteToast: "Audio files from {names} were replaced too.",
   soundBankCount: "{n} audio files",
   removeActiveTitle: "Uninstall {name}?",
   removeActiveBody:
@@ -225,7 +211,7 @@ const en = {
   mixerTitle: "Audio mixer",
   mixerHelp:
     "Each row is one audio file the game reads. Pick which downloaded mod fills it, or leave it to the game.",
-  mixerEmpty: "Install an audio mod to mix it with another.",
+  mixerEmpty: "No audio mod downloaded yet. The mixer lists what each one can fill.",
   mixerStock: "Game default",
   mixerForeign: "Put there by hand",
   mixerRisky:
@@ -266,7 +252,7 @@ const en = {
   overwriteWarnAll:
     "{names} would go silent: every one of its audio files gets replaced. Deactivate it if you would rather not keep it that way.",
   overwriteWarnSome:
-    "Some audio from {names} gets replaced. Those mods keep playing everything else.",
+    "Some audio files from {names} get replaced. Those mods keep playing everything else.",
   overwriteWarnForeign:
     "{n} audio files already in sound/mod get replaced. The app did not put them there, so it cannot say which mod they belong to or put them back.",
   sightVehicleCount: "{n} vehicles",
@@ -301,7 +287,7 @@ const en = {
   E_NO_LIBRARY: "The application could not work out where to keep downloaded archives.",
   E_NO_CONFIG_BLK:
     "config.blk is missing. Launch War Thunder once so it creates the file, then try again.",
-  E_NO_ACTIVATION: "This content type is either in the game or not at all.",
+  E_NO_ACTIVATION: "This content type has no in-between state: it is installed or it is not.",
   V_EMPTY: "No folder given.",
   V_NOT_FOUND: "This folder does not exist.",
   V_NOT_DIR: "This is not a folder.",
@@ -314,31 +300,25 @@ const en = {
 export type Key = keyof typeof en;
 
 const fr: Record<Key, string> = {
-  appName: "War Thunder Content Manager",
   brandTop: "War Thunder",
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "Camouflages",
 
   tabInstalled: "Installés",
-  soon: "Bientôt",
   navSights: "Viseurs",
   navSounds: "Audio",
   tabAudioSettings: "Paramètres audio",
   gameFolder: "Dossier du jeu",
   open: "Ouvrir",
   change: "Changer",
-  openSkinsFolder: "Ouvrir UserSkins",
-  changeFolder: "Changer de dossier",
   language: "Langue",
 
   install: "Installer",
-  installing: "Installation…",
   uninstall: "Désinstaller",
   uninstalling: "Retrait…",
   downloading: "Téléchargement",
   extracting: "Extraction",
-  storing: "Rangement dans UserSkins",
   installTitle: "Installer ce camouflage",
   installNamed: "Installer {name}",
   installNameLabel: "Nom du dossier",
@@ -372,8 +352,6 @@ const fr: Record<Key, string> = {
   noResultsHashtag:
     "Ce hashtag n'existe peut-être pas. Les filtres véhicule restent plus fiables.",
   noResultsFilters: "Essaie d'élargir les filtres.",
-  previous: "Précédent",
-  next: "Suivant",
   page: "Page {n}",
   endOfList: "Fin de la liste.",
   removeFilter: "Retirer ce filtre",
@@ -399,12 +377,8 @@ const fr: Record<Key, string> = {
   localOnly:
     "Installé localement, visible de toi seul. Rien n'est transmis au serveur de jeu.",
   otherCreations: "Autres créations",
-  loadingCreations: "Chargement des créations de l'auteur…",
-  noOtherCreations: "Aucun autre camouflage de cet auteur.",
   uploadedOn: "mis en ligne le {date}",
 
-  byAuthor: "Camouflages de {name}",
-  authorPage: "Voir la page auteur",
   backToBrowse: "Retour à la navigation",
   authorEmpty: "Cet auteur n'a aucun camouflage sur cette page.",
   authorNote:
@@ -460,14 +434,12 @@ const fr: Record<Key, string> = {
   externalBody: "Ce lien s'ouvre dans ton navigateur, en dehors de l'application.",
   externalOpen: "Ouvrir dans le navigateur",
 
-  firstRun: "Premier lancement",
   setupTitle: "Où est installé War Thunder ?",
   setupIntro:
     "Indique le dossier racine du jeu. Les camouflages seront installés dans son sous-dossier UserSkins.",
   setupField: "Dossier du jeu",
   browse: "Parcourir…",
   detecting: "Recherche de l'installation via Steam…",
-  foundViaSteam: "Trouvé via Steam. Destination :",
   skinsDestination: "Destination des camouflages",
   checking: "Vérification…",
   continueLabel: "Continuer",
@@ -479,7 +451,7 @@ const fr: Record<Key, string> = {
   retry: "Réessayer",
   installedToast: "{name} installé.",
   uninstalledToast: "{name} désinstallé.",
-  sightOverwriteToast: "A aussi remplacé des viseurs utilisés par {names}.",
+  sightOverwriteToast: "Des viseurs utilisés par {names} ont aussi été remplacés.",
   // Mods audio
   activate: "Activer",
   deactivate: "Désactiver",
@@ -490,7 +462,7 @@ const fr: Record<Key, string> = {
   activatedToast: "{name} est maintenant dans le jeu.",
   deactivatedToast: "{name} est sorti du jeu. Son archive est conservée.",
   activateFailed: "Impossible de changer ce mod : {reason}",
-  soundOverwriteToast: "A aussi remplacé de l'audio fourni par {names}.",
+  soundOverwriteToast: "Des fichiers audio de {names} ont aussi été remplacés.",
   soundBankCount: "{n} fichiers audio",
   removeActiveTitle: "Désinstaller {name} ?",
   removeActiveBody:
@@ -506,11 +478,11 @@ const fr: Record<Key, string> = {
   mixerTitle: "Mixeur audio",
   mixerHelp:
     "Chaque ligne est un fichier audio que le jeu lit. Choisis quel mod téléchargé l'occupe, ou laisse-le au jeu.",
-  mixerEmpty: "Installe un mod audio pour le mélanger avec un autre.",
-  mixerStock: "Son d'origine",
+  mixerEmpty: "Aucun mod audio téléchargé. Le mixeur liste ce que chacun sait occuper.",
+  mixerStock: "Audio d'origine",
   mixerForeign: "Posé à la main",
   mixerRisky:
-    "C'est celui-là qui casse l'audio quand on le panache. Les auteurs demandent de garder le masterbank d'un seul mod.",
+    "Panacher cette banque entre plusieurs mods, c'est ce qui casse l'audio. Les auteurs demandent de garder le masterbank d'un seul mod.",
   mixerOccupied: "{n} sur {total} occupés",
   slotVehicle_tanks: "Chars",
   slotVehicle_aircraft: "Avions",
@@ -547,9 +519,9 @@ const fr: Record<Key, string> = {
   overwriteWarnAll:
     "{names} ne jouera plus rien : tous ses fichiers audio sont remplacés. Désactive-le si tu ne veux pas le garder ainsi.",
   overwriteWarnSome:
-    "De l'audio de {names} sera remplacé. Ces mods continuent de jouer tout le reste.",
+    "Des fichiers audio de {names} seront remplacés. Ces mods continuent de jouer tout le reste.",
   overwriteWarnForeign:
-    "{n} fichiers audio déjà présents dans sound/mod seront remplacés. L'application ne les a pas posés : elle ne sait pas de quel mod ils viennent, ni les remettre.",
+    "{n} fichiers audio déjà présents dans sound/mod seront remplacés. L'application ne les a pas posés : elle ignore de quel mod ils viennent et ne saura pas les remettre.",
   sightVehicleCount: "{n} véhicules",
   installFailed: "Échec de l'installation : {reason}",
   uninstallFailed: "Échec de la désinstallation : {reason}",
@@ -584,7 +556,8 @@ const fr: Record<Key, string> = {
   E_NO_LIBRARY: "L'application n'a pas su où conserver les archives téléchargées.",
   E_NO_CONFIG_BLK:
     "config.blk est absent. Lance War Thunder une fois pour qu'il le crée, puis réessaie.",
-  E_NO_ACTIVATION: "Ce type de contenu est dans le jeu, ou pas du tout.",
+  E_NO_ACTIVATION:
+    "Ce type de contenu n'a pas d'état intermédiaire : il est installé ou il ne l'est pas.",
   V_EMPTY: "Aucun dossier fourni.",
   V_NOT_FOUND: "Ce dossier n'existe pas.",
   V_NOT_DIR: "Ceci n'est pas un dossier.",
@@ -595,31 +568,25 @@ const fr: Record<Key, string> = {
 };
 
 const ru: Record<Key, string> = {
-  appName: "War Thunder Content Manager",
   brandTop: "War Thunder",
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "Камуфляжи",
 
   tabInstalled: "Установленные",
-  soon: "Скоро",
   navSights: "Прицелы",
   navSounds: "Аудио",
   tabAudioSettings: "Настройки аудио",
   gameFolder: "Папка игры",
   open: "Открыть",
   change: "Изменить",
-  openSkinsFolder: "Открыть UserSkins",
-  changeFolder: "Сменить папку",
   language: "Язык",
 
   install: "Установить",
-  installing: "Установка…",
   uninstall: "Удалить",
   uninstalling: "Удаление…",
   downloading: "Загрузка",
   extracting: "Распаковка",
-  storing: "Размещение в UserSkins",
   installTitle: "Установить этот камуфляж",
   installNamed: "Установить «{name}»",
   installNameLabel: "Имя папки",
@@ -652,8 +619,6 @@ const ru: Record<Key, string> = {
   noResults: "Ничего не найдено",
   noResultsHashtag: "Такого хэштега может не быть. Фильтры по технике надёжнее.",
   noResultsFilters: "Попробуйте ослабить фильтры.",
-  previous: "Назад",
-  next: "Вперёд",
   page: "Страница {n}",
   endOfList: "Конец списка.",
   removeFilter: "Снять этот фильтр",
@@ -679,12 +644,8 @@ const ru: Record<Key, string> = {
   localOnly:
     "Установлено локально и видно только вам. На игровой сервер ничего не передаётся.",
   otherCreations: "Другие работы",
-  loadingCreations: "Загрузка работ автора…",
-  noOtherCreations: "У этого автора нет других камуфляжей.",
   uploadedOn: "опубликовано {date}",
 
-  byAuthor: "Камуфляжи автора {name}",
-  authorPage: "Страница автора",
   backToBrowse: "Вернуться к обзору",
   authorEmpty: "На этой странице у автора нет камуфляжей.",
   authorNote:
@@ -740,14 +701,12 @@ const ru: Record<Key, string> = {
   externalBody: "Эта ссылка откроется в браузере, за пределами приложения.",
   externalOpen: "Открыть в браузере",
 
-  firstRun: "Первый запуск",
   setupTitle: "Где установлена War Thunder?",
   setupIntro:
     "Укажите корневую папку игры. Камуфляжи устанавливаются в её подпапку UserSkins.",
   setupField: "Папка игры",
   browse: "Обзор…",
   detecting: "Поиск установленной игры через Steam…",
-  foundViaSteam: "Найдено через Steam. Назначение:",
   skinsDestination: "Камуфляжи попадут в",
   checking: "Проверка…",
   continueLabel: "Продолжить",
@@ -770,7 +729,7 @@ const ru: Record<Key, string> = {
   activatedToast: "{name} теперь в игре.",
   deactivatedToast: "{name} убран из игры. Архив сохранён.",
   activateFailed: "Не удалось изменить этот мод: {reason}",
-  soundOverwriteToast: "Также заменено аудио из {names}.",
+  soundOverwriteToast: "Также заменены аудиофайлы из {names}.",
   soundBankCount: "{n} аудиофайлов",
   removeActiveTitle: "Удалить {name}?",
   removeActiveBody:
@@ -785,7 +744,7 @@ const ru: Record<Key, string> = {
   mixerTitle: "Аудиомикшер",
   mixerHelp:
     "Каждая строка — один аудиофайл, который читает игра. Выберите, какой загруженный мод его занимает, или оставьте игре.",
-  mixerEmpty: "Установите аудиомод, чтобы смешать его с другим.",
+  mixerEmpty: "Аудиомоды ещё не загружены. Микшер покажет, что каждый из них умеет занять.",
   mixerStock: "Аудио игры",
   mixerForeign: "Положено вручную",
   mixerRisky:
@@ -826,7 +785,7 @@ const ru: Record<Key, string> = {
   overwriteWarnAll:
     "{names} замолчит: все его аудиофайлы будут заменены. Отключите его, если не хотите оставлять его в таком виде.",
   overwriteWarnSome:
-    "Часть аудио из {names} будет заменена. Остальное эти моды продолжат воспроизводить.",
+    "Часть аудиофайлов из {names} будет заменена. Остальное эти моды продолжат воспроизводить.",
   overwriteWarnForeign:
     "{n} аудиофайлов, уже лежащих в sound/mod, будут заменены. Приложение их не размещало, поэтому не знает, какому моду они принадлежат, и не сможет их вернуть.",
   sightVehicleCount: "{n} техники",
@@ -862,7 +821,8 @@ const ru: Record<Key, string> = {
   E_NO_LIBRARY: "Приложение не определило, где хранить загруженные архивы.",
   E_NO_CONFIG_BLK:
     "Файл config.blk отсутствует. Запустите War Thunder один раз, чтобы он появился, и повторите.",
-  E_NO_ACTIVATION: "Этот тип содержимого либо в игре, либо нет.",
+  E_NO_ACTIVATION:
+    "У этого типа содержимого нет промежуточного состояния: он либо установлен, либо нет.",
   V_EMPTY: "Папка не указана.",
   V_NOT_FOUND: "Такой папки не существует.",
   V_NOT_DIR: "Это не папка.",
@@ -873,31 +833,25 @@ const ru: Record<Key, string> = {
 };
 
 const zh: Record<Key, string> = {
-  appName: "War Thunder Content Manager",
   brandTop: "War Thunder",
   brandBottom: "Content Manager",
   monogram: "WT",
   contentCamouflages: "涂装",
 
   tabInstalled: "已安装",
-  soon: "即将推出",
   navSights: "瞄准镜",
   navSounds: "音频",
   tabAudioSettings: "音频设置",
   gameFolder: "游戏文件夹",
   open: "打开",
   change: "更改",
-  openSkinsFolder: "打开 UserSkins",
-  changeFolder: "更改文件夹",
   language: "语言",
 
   install: "安装",
-  installing: "正在安装…",
   uninstall: "卸载",
   uninstalling: "正在移除…",
   downloading: "正在下载",
   extracting: "正在解压",
-  storing: "正在放入 UserSkins",
   installTitle: "安装此涂装",
   installNamed: "安装《{name}》",
   installNameLabel: "文件夹名称",
@@ -929,8 +883,6 @@ const zh: Record<Key, string> = {
   noResults: "没有结果",
   noResultsHashtag: "该标签可能不存在。按载具筛选更可靠。",
   noResultsFilters: "试试放宽筛选条件。",
-  previous: "上一页",
-  next: "下一页",
   page: "第 {n} 页",
   endOfList: "已到列表末尾。",
   removeFilter: "清除此筛选",
@@ -953,12 +905,8 @@ const zh: Record<Key, string> = {
   viewOnLive: "在 WT Live 上查看",
   localOnly: "仅安装在本地，只有你能看到。不会发送到游戏服务器。",
   otherCreations: "其他作品",
-  loadingCreations: "正在载入该作者的作品…",
-  noOtherCreations: "该作者没有其他涂装。",
   uploadedOn: "发布于 {date}",
 
-  byAuthor: "{name} 的涂装",
-  authorPage: "查看作者页面",
   backToBrowse: "返回浏览",
   authorEmpty: "该作者在本页没有涂装。",
   authorNote: "作者的动态中还包含截图和视频；此处只列出可安装的涂装。",
@@ -1012,13 +960,11 @@ const zh: Record<Key, string> = {
   externalBody: "该链接将在浏览器中打开，离开本应用。",
   externalOpen: "在浏览器中打开",
 
-  firstRun: "首次启动",
   setupTitle: "War Thunder 安装在哪里？",
   setupIntro: "请指向游戏的根文件夹。涂装会安装到其下的 UserSkins 子文件夹。",
   setupField: "游戏文件夹",
   browse: "浏览…",
   detecting: "正在通过 Steam 查找安装位置…",
-  foundViaSteam: "已通过 Steam 找到。目标位置：",
   skinsDestination: "涂装将安装到",
   checking: "正在检查…",
   continueLabel: "继续",
@@ -1040,7 +986,7 @@ const zh: Record<Key, string> = {
   activatedToast: "{name} 已进入游戏。",
   deactivatedToast: "{name} 已移出游戏，压缩包已保留。",
   activateFailed: "无法更改此模组：{reason}",
-  soundOverwriteToast: "同时替换了 {names} 提供的音频。",
+  soundOverwriteToast: "{names} 的音频文件也被替换了。",
   soundBankCount: "{n} 个音频文件",
   removeActiveTitle: "卸载 {name}？",
   removeActiveBody:
@@ -1053,7 +999,7 @@ const zh: Record<Key, string> = {
   // Mixeur : emplacements sonores.
   mixerTitle: "音频混合器",
   mixerHelp: "每一行是游戏读取的一个音频文件。选择由哪个已下载的模组占用，或保留游戏原声。",
-  mixerEmpty: "安装一个音频模组，即可与其他模组混搭。",
+  mixerEmpty: "尚未下载音频模组。混合器会列出每个模组能占用的位置。",
   mixerStock: "游戏原声",
   mixerForeign: "手动放入",
   mixerRisky: "混搭它正是音频损坏的原因。作者建议只保留单个模组的 masterbank。",
@@ -1124,7 +1070,7 @@ const zh: Record<Key, string> = {
   E_NO_LIBRARY: "应用未能确定下载的压缩包存放位置。",
   E_NO_CONFIG_BLK:
     "缺少 config.blk。请先启动一次《战争雷霆》让它生成该文件，然后重试。",
-  E_NO_ACTIVATION: "该内容类型要么在游戏中，要么完全不在。",
+  E_NO_ACTIVATION: "该内容类型没有中间状态：要么已安装，要么没有。",
   V_EMPTY: "未指定文件夹。",
   V_NOT_FOUND: "该文件夹不存在。",
   V_NOT_DIR: "这不是一个文件夹。",
