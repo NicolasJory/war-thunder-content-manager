@@ -3,9 +3,9 @@
 [![Latest release](https://img.shields.io/github/v/release/NicolasJory/war-thunder-content-manager)](https://github.com/NicolasJory/war-thunder-content-manager/releases/latest)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 
-Browse the camouflages and gun sights published on [War Thunder Live](https://live.warthunder.com) and install them into the game with one click.
+Browse the camouflages, gun sights and audio mods published on [War Thunder Live](https://live.warthunder.com) and install them into the game with one click.
 
-Doing this by hand means downloading an archive, unzipping it, and dropping the folder in the right place inside your game files. The app handles those three steps, and removes cleanly whatever it installed.
+Doing this by hand means downloading an archive, unzipping it, and dropping the folder in the right place inside your game files. Audio mods add a fourth step, a line in `config.blk` without which the game ignores them. The app does all of it, and takes back out whatever it put in.
 
 ## Features
 
@@ -15,10 +15,27 @@ Doing this by hand means downloading an archive, unzipping it, and dropping the 
 - One-click install, and you choose the folder name the game will show
 - Tracks what you installed and flags content republished since
 - Author favourites, with a feed of what they published last, plus shareable links that open straight in the app
-- Camouflages and gun sights, switched from the sidebar
+- Camouflages, gun sights and audio mods, switched from the sidebar
+- A panel you open over the game on a shortcut, already on the vehicle you have selected
 - Interface in English, French, Russian and Simplified Chinese
 
 The app finds your Steam installation on first launch. It never touches folders it did not create: Gaijin's templates and camouflages you placed by hand stay untouched, and appear read-only.
+
+### Audio mods
+
+A downloaded mod is either in the game or set aside with its archive kept, so putting it back costs no second download. Uninstalling deletes the audio files and the archive together, and says so first if the mod happens to be in the game.
+
+Most archives carry more than you want. A pack may hold English and Russian crew voices, or engine sounds next to gun sounds you would rather leave stock. The app reads the archive layout before extracting anything and asks which parts go in.
+
+The game reads `sound/mod` flat, one file per name, so two mods shipping the same name compete for it. The mixer gives each name a row showing which mod fills it and which others could. You choose row by row, or hand a row back to the game.
+
+### The panel over the game
+
+Press Alt+X in the hangar and a panel opens above War Thunder, on the camouflages for the vehicle you have selected. Install from there without leaving the game. Change the shortcut under Settings.
+
+Nothing is injected into War Thunder, no memory is read and no graphics call is hooked. The panel is an ordinary window placed on top, and it learns the selected vehicle from the local HTTP interface Gaijin publishes for third-party tools, the one map and telemetry apps already use. That is the extent of the contact with a process BattlEye watches.
+
+Closing the main window sends the app to the notification area instead of quitting, which keeps the panel one keystroke away. Quit from its tray menu.
 
 ## Install
 
@@ -47,7 +64,9 @@ The binaries carry no code signature. A certificate runs several hundred euros a
 
 ## What the app does with your data
 
-Nothing leaves your machine. There is no account, no telemetry and no server in between: the app talks to War Thunder Live directly. It writes camouflages into your game's `UserSkins` folder, and sights into `Documents\My Games\WarThunder\Saves\<your account>\production\UserSights`, which is where the game reads them from.
+Nothing leaves your machine. There is no account, no telemetry and no server in between: the app talks to War Thunder Live directly. It writes camouflages into your game's `UserSkins` folder, and sights into `Documents\My Games\WarThunder\Saves\<your account>\production\UserSights`, which is where the game reads them from. Audio mods go into `sound\mod` inside the game folder, and the app writes `enable_mod:b=yes` into `config.blk` so the game loads them, taking that line back out when the last mod leaves.
+
+While the game runs, the app asks `http://127.0.0.1:8111` which vehicle you have selected. That server is War Thunder's own, it answers on your machine alone, and the app only reads from it.
 
 Installed content is visible to you alone, locally. The game server never sees it.
 
@@ -79,8 +98,15 @@ npm run dev
 | `npm run smoke:ui` | Filters, translations, description parsing |
 | `npm run smoke:validate` | IPC boundary validation, incoming links, endpoint manifest |
 | `npm run smoke:sight` | Sight install against your real sights folder |
+| `npm run smoke:sight-overwrite` | Reticles shared between sight packs |
 | `npm run smoke:config` | Steam detection, persistence |
 | `npm run smoke:network` | Retries, timeouts and backoff, against a local failing server |
+| `npm run smoke:sound` | Classifying an audio archive's layout, on four real ones, and patching `config.blk` |
+| `npm run smoke:sound-install` | Install, activate and uninstall against a fake game folder |
+| `npm run smoke:sound-slots` | The mixer: which mod fills which audio file |
+| `npm run smoke:vehicle` | Reading the selected vehicle from the game and from the profile |
+| `npm run smoke:shortcut` | Shortcut capture, and what it turns down |
+| `npm run smoke:backdrop` | When a modal closes and when it must not |
 
 The tests hit the live API and download real archives. They are slow and depend on the network, on purpose: a suite that only talks to mocks would never notice the API changing under it.
 
@@ -123,7 +149,9 @@ Each field is validated on its own. A half-wrong file keeps the defaults for wha
 
 **Vehicle filter values stay in English** across all four languages. They come from the API, over a taxonomy of more than 3,000 entries that shifts with every game update.
 
-**Sound mods are not installable yet.** They also need `config.blk` patched and reverted, which the other content types do not.
+**Audio mods only reach your ears on the next launch.** War Thunder loads its sound banks once, at startup. Change a mod mid-session and you will hear it after you restart the game.
+
+**The panel needs windowed fullscreen.** In exclusive fullscreen Windows hands the whole surface to the game, and nothing draws above it.
 
 **Some sight archives get turned down.** The app reads the archive layout by matching folder names against Live's vehicle taxonomy, which covers every pack tested so far. An archive laid out some other way is refused rather than guessed at: a sight dropped in the wrong folder never shows up in game, and you would have no way to tell why.
 
