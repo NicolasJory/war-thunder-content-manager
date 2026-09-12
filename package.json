@@ -58,7 +58,9 @@
     },
     "files": [
       "out/**/*",
-      "package.json"
+      "package.json",
+      "build/icon.png",
+      "build/icon-32.png"
     ],
     "publish": [
       {

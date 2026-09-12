@@ -89,6 +89,7 @@ interface Api {
   };
   currentVehicle(): Promise<VehicleSelection>;
   onVehicleChange(cb: (s: VehicleSelection) => void): () => void;
+  setTrayLabels(labels: { open: string; panel: string; quit: string }): Promise<void>;
   vehicleFont(): Promise<string | null>;
   openSkinsFolder(): Promise<void>;
   openExternal(url: string): Promise<void>;

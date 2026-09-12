@@ -1557,9 +1557,16 @@ code {
 
 /* ------------------------- Icônes de véhicule ------------------------- */
 /* Skyquake dessine les marqueurs nationaux (▄ ◘ ␗) dans les libellés. */
+/* Les noms de véhicules de la taxonomie portent un marqueur national dessiné
+   par Skyquake. Partout où ces noms s'affichent — options de filtre, bandeau
+   du véhicule en jeu, titre du panneau — la police doit suivre, sinon le
+   marqueur sort en caractère de repli (« ◘Sea Hawk Mk.50 »). */
 .has-skyquake .combo-option,
 .has-skyquake .combo-field .input,
-.has-skyquake .combo-group {
+.has-skyquake .combo-group,
+.has-skyquake .banner.ingame,
+.has-skyquake .overlay-title,
+.has-skyquake .mixer-slot {
   font-family: "Skyquake", "Inter", "Segoe UI", system-ui, sans-serif;
 }
 
@@ -1970,13 +1977,18 @@ code {
 }
 
 /* Le bandeau du véhicule en jeu : une information, plus un raccourci. */
+/* `.banner` aligne en haut pour que son icône suive un texte de plusieurs
+   lignes. Ici la ligne est unique et porte un bouton : tout se centre. */
 .banner.ingame {
+  align-items: center;
   justify-content: flex-start;
   gap: 10px;
+  padding: 8px 10px 8px 12px;
 }
 .banner.ingame .btn {
-  height: 26px;
+  height: 30px;
   margin-left: auto;
+  flex: none;
 }
 
 /* ------------------------- Panneau flottant ------------------------- */
@@ -2073,4 +2085,10 @@ body.is-overlay {
   font-family: "Cascadia Mono", Consolas, ui-monospace, monospace;
   letter-spacing: 0.04em;
   min-width: 190px;
+}
+.tray-hint {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  max-width: 56ch;
 }

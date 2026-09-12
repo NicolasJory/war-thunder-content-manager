@@ -69,6 +69,9 @@ const api = {
     ipcRenderer.on("vehicle:changed", handler);
     return () => ipcRenderer.removeListener("vehicle:changed", handler);
   },
+  /** Libellés du menu de la zone de notification : les traductions vivent ici. */
+  setTrayLabels: (labels: { open: string; panel: string; quit: string }) =>
+    ipcRenderer.invoke("app:trayLabels", labels),
   vehicleFont: () => ipcRenderer.invoke("assets:vehicleFont"),
   openSkinsFolder: () => ipcRenderer.invoke("shell:openSkinsFolder"),
   // Le renderer ne doit appeler ceci qu'après consentement explicite.

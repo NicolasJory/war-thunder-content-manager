@@ -97,6 +97,8 @@ export function Mixer({
           raccourci est global, donc susceptible d'être déjà pris. */}
       <section className="settings-block">
         <ShortcutField value={shortcut} onSaved={onShortcut} />
+        {/* Fermer la fenêtre ne quitte plus : ça surprend si on ne le dit pas. */}
+        <p className="hint tray-hint">{t("closeToTrayHint")}</p>
       </section>
 
       {/* Sans mod audio téléchargé, il n'y a aucune place à attribuer : on le

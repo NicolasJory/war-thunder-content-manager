@@ -50,6 +50,11 @@ const en = {
     "Click, then press the keys you want. It is registered system-wide, so pick something the game does not use.",
   shortcutRefused:
     "The system refused that combination, most likely another application holds it. The previous one is still active.",
+  trayOpen: "Open the manager",
+  trayPanel: "Show the panel",
+  trayQuit: "Quit",
+  closeToTrayHint:
+    "Closing this window keeps the app in the notification area, so the panel shortcut still works while you play. Quit from there.",
   gameFolder: "Game folder",
   open: "Open",
   change: "Change",
@@ -335,6 +340,11 @@ const fr: Record<Key, string> = {
     "Clique, puis appuie sur les touches voulues. Il est enregistré pour tout le système : choisis une combinaison que le jeu n'utilise pas.",
   shortcutRefused:
     "Le système a refusé cette combinaison, sans doute déjà prise par une autre application. L'ancienne reste active.",
+  trayOpen: "Ouvrir le gestionnaire",
+  trayPanel: "Afficher le panneau",
+  trayQuit: "Quitter",
+  closeToTrayHint:
+    "Fermer cette fenêtre range l'application dans la zone de notification : le raccourci du panneau continue de marcher pendant que tu joues. C'est de là qu'on quitte.",
   gameFolder: "Dossier du jeu",
   open: "Ouvrir",
   change: "Changer",
@@ -616,6 +626,11 @@ const ru: Record<Key, string> = {
     "Нажмите кнопку, затем нужные клавиши. Сочетание регистрируется на уровне системы — выберите то, что не занято игрой.",
   shortcutRefused:
     "Система отклонила это сочетание, скорее всего его уже занимает другое приложение. Прежнее осталось в силе.",
+  trayOpen: "Открыть менеджер",
+  trayPanel: "Показать панель",
+  trayQuit: "Выход",
+  closeToTrayHint:
+    "Закрытие окна сворачивает приложение в область уведомлений: сочетание для панели продолжает работать во время игры. Выход — оттуда.",
   gameFolder: "Папка игры",
   open: "Открыть",
   change: "Изменить",
@@ -891,6 +906,10 @@ const zh: Record<Key, string> = {
   shortcutNone: "无",
   shortcutHelp: "点击后按下所需按键。快捷键在系统级注册，请选择游戏未占用的组合。",
   shortcutRefused: "系统拒绝了该组合，很可能已被其他应用占用。原有快捷键仍然有效。",
+  trayOpen: "打开管理器",
+  trayPanel: "显示面板",
+  trayQuit: "退出",
+  closeToTrayHint: "关闭此窗口会将应用收进通知区域：游戏时面板快捷键仍然可用。退出请从那里操作。",
   gameFolder: "游戏文件夹",
   open: "打开",
   change: "更改",

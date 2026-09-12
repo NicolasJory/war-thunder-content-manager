@@ -12,8 +12,10 @@ import {
   dialog,
   globalShortcut,
   ipcMain,
+  Menu,
   session,
   shell,
+  Tray,
 } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -134,6 +136,18 @@ function deliverLink(link: DeepLink | null) {
 let store: ReturnType<typeof createConfigStore>;
 let win: BrowserWindow | null = null;
 let overlay: BrowserWindow | null = null;
+let tray: Tray | null = null;
+
+/**
+ * Vrai à partir du moment où l'utilisateur demande vraiment à quitter.
+ *
+ * Fermer la fenêtre principale la range dans la zone de notification au lieu
+ * de terminer l'application : le panneau reste atteignable au raccourci
+ * pendant qu'on joue, ce qui est tout son intérêt. Sans ce drapeau, « Quitter »
+ * ne ferait que masquer la fenêtre et l'application deviendrait impossible à
+ * arrêter autrement qu'au gestionnaire de tâches.
+ */
+let quitting = false;
 
 /**
  * (Ré)enregistre le raccourci du panneau.
@@ -177,6 +191,10 @@ function createOverlay() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      // Electron ralentit les minuteurs d'une fenêtre cachée ou masquée. Le
+      // panneau passe l'essentiel de son temps caché : sans ceci, il rendait
+      // le changement de véhicule avec plusieurs secondes de retard.
+      backgroundThrottling: false,
     },
   });
 
@@ -199,6 +217,61 @@ function createOverlay() {
   return overlay;
 }
 
+/**
+ * Icône de la zone de notification.
+ *
+ * C'est le seul moyen de revenir quand la fenêtre principale est rangée, et
+ * le seul endroit où « Quitter » termine réellement l'application. Une
+ * application qui se cache sans laisser de porte de sortie visible se fait
+ * tuer au gestionnaire de tâches, ce qui laisserait le raccourci global
+ * enregistré derrière elle.
+ */
+interface TrayLabels {
+  open: string;
+  panel: string;
+  quit: string;
+}
+
+/**
+ * Les libellés viennent du renderer : les traductions vivent là-bas, et le
+ * main n'a pas de raison d'en tenir une seconde copie. Le menu se reconstruit
+ * quand l'utilisateur change de langue.
+ */
+function setupTray(labels: TrayLabels) {
+  if (!tray) {
+    // `build/` fait partie des fichiers embarqués : le chemin vaut depuis les
+    // sources comme depuis l'archive de l'application installée.
+    tray = new Tray(path.join(dirname, "../../build/icon-32.png"));
+    tray.setToolTip(app.getName());
+    // Double-clic : le geste que tout le monde essaie en premier.
+    tray.on("double-click", () => showMain());
+  }
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      { label: labels.open, click: () => showMain() },
+      { label: labels.panel, click: () => toggleOverlay() },
+      { type: "separator" },
+      {
+        label: labels.quit,
+        click: () => {
+          quitting = true;
+          app.quit();
+        },
+      },
+    ])
+  );
+}
+
+function showMain() {
+  if (!win || win.isDestroyed()) {
+    createWindow();
+    return;
+  }
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+}
+
 function toggleOverlay() {
   const w = createOverlay();
   if (w.isVisible()) {
@@ -207,6 +280,16 @@ function toggleOverlay() {
   }
   w.show();
   w.focus();
+
+  // Relecture à l'ouverture, en plus du guetteur. Le fichier a pu changer
+  // pendant que le panneau était caché, ou le guetteur avoir manqué une
+  // écriture : montrer le mauvais véhicule au moment précis où on regarde
+  // serait le pire moment pour se tromper.
+  void readSelection().then((selection) => {
+    if (!w.isDestroyed() && !w.webContents.isDestroyed()) {
+      w.webContents.send("vehicle:changed", selection);
+    }
+  });
 }
 
 // ------------------------- Fenêtre ------------------------- //
@@ -241,6 +324,11 @@ function createWindow() {
         w.webContents.send("vehicle:changed", selection);
       }
     }
+  });
+  win.on("close", (e) => {
+    if (quitting) return;
+    e.preventDefault();
+    win?.hide();
   });
   win.on("closed", () => {
     stopWatch();
@@ -668,6 +756,19 @@ function registerIpc() {
   ipcMain.handle("overlay:toggle", () => toggleOverlay());
 
   /**
+   * Libellés du menu de la zone de notification, envoyés par le renderer au
+   * montage et à chaque changement de langue.
+   */
+  ipcMain.handle("app:trayLabels", (_e, raw: unknown) => {
+    const l = (raw ?? {}) as Record<string, unknown>;
+    setupTray({
+      open: asString(l.open, 80),
+      panel: asString(l.panel, 80),
+      quit: asString(l.quit, 80),
+    });
+  });
+
+  /**
    * Change le raccourci du panneau. Rend `false` si le système le refuse,
    * auquel cas on remet celui d'avant plutôt que de laisser l'utilisateur
    * sans raccourci du tout.
@@ -691,7 +792,20 @@ function registerIpc() {
    * ramener la fenêtre au premier plan et y ouvrir un contenu.
    */
   ipcMain.handle("overlay:openInMain", (_e, langGroup: unknown) => {
-    deliverLink({ kind: "post", langGroup: asIndex(langGroup, Number.MAX_SAFE_INTEGER) });
+    const link: DeepLink = {
+      kind: "post",
+      langGroup: asIndex(langGroup, Number.MAX_SAFE_INTEGER),
+    };
+    // Pas par `deliverLink` : son limiteur d'une seconde existe contre un site
+    // qui déclencherait `wtcm://` en rafale. Ici c'est notre propre panneau, et
+    // le limiteur avalait le second clic quand on comparait deux camouflages.
+    if (!win || win.isDestroyed()) {
+      pendingLink = link;
+      showMain();
+      return;
+    }
+    showMain();
+    if (!win.webContents.isDestroyed()) win.webContents.send("app:deepLink", link);
   });
 
   /** Le tableau du mixeur : un emplacement sonore par ligne. */
@@ -832,6 +946,16 @@ if (!primary) {
     });
   });
 }
+
+app.on("before-quit", () => {
+  quitting = true;
+  // Le panneau est une fenêtre cachée, pas fermée : sans ceci elle maintient
+  // le processus en vie et `window-all-closed` ne se déclenche jamais.
+  overlay?.destroy();
+  overlay = null;
+  tray?.destroy();
+  tray = null;
+});
 
 app.on("will-quit", () => globalShortcut.unregisterAll());
 
